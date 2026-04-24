@@ -1,7 +1,7 @@
 # Technical Reference — SWE Best Practices Pulse
 
 Engineering guide for running, developing, and deploying the application.  
-For product context and scoring definition see [README.md](README.md).
+For product context and scoring definition see [PRODUCT.md](PRODUCT.md).
 
 ## Stack
 
@@ -187,4 +187,5 @@ npm run build
 | Questions, categories, weights, recommendations | `src/data/assessmentTemplate.ts` |
 | Domain types | `src/types/assessment.ts` |
 | Scoring logic | `src/lib/scoring.ts` |
+| Reference prompt templates | `prompts/` |
 | Agent / contributor rules | `AGENTS.md` |

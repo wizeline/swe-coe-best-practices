@@ -162,7 +162,7 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
             {scaleConfig.map(({ value, label }) => (
               <span key={value} className="scale-legend-item">
                 <span className="scale-legend-dot" aria-hidden="true" />
-                <span><strong>{value}</strong> {label}</span>
+                <span>{label}</span>
               </span>
             ))}
           </div>
@@ -248,11 +248,10 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
                                 value={value}
                                 checked={selected === value}
                                 onChange={() => updateAnswer(question.id, value)}
-                                aria-label={`${value} - ${label}${optionDescription ? `: ${optionDescription}` : ""}`}
+                                aria-label={`${label}${optionDescription ? `: ${optionDescription}` : ""}`}
                                 aria-describedby={optionDescription ? optionDescriptionId : undefined}
                               />
                               <span className="scale-option-head" aria-hidden="true">
-                                <span className="scale-value-badge">{value}</span>
                                 <span className="scale-label-text">{SCORE_LABELS[String(value)] ?? label}</span>
                               </span>
                               {optionDescription && (

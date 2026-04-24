@@ -422,7 +422,7 @@ function ScoreCard({ result, email }: ScoreCardProps) {
         </section>
       </aside>
 
-      <article className="card results-content-card">
+      <article className="card results-content-card results-content-card--suggestions">
         <section className="suggestions">
           <h3>Actions to Improve</h3>
           {result.categories.flatMap((category) =>
@@ -442,7 +442,7 @@ function ScoreCard({ result, email }: ScoreCardProps) {
         </section>
       </article>
 
-      <article className="card results-content-card">
+      <article className="card results-content-card results-content-card--session-code">
         <SessionCodeInput />
       </article>
     </div>

@@ -490,19 +490,10 @@ body {
   gap: 8px;
 }
 
-.scale-value-badge {
-  font-family: var(--font-mono), monospace;
-  font-size: 0.9rem;
-  font-weight: 800;
-  min-width: 20px;
-  line-height: 1;
-  color: #666;
-}
-
 .scale-description {
   color: #5a5a5a;
-  font-size: clamp(0.76rem, 0.45vw, 0.8rem);
-  line-height: 1.35;
+  font-size: clamp(0.9rem, 0.5vw, 1rem);
+  line-height: 1.45;
 }
 
 .scale-option:has(input:checked) {
@@ -1102,9 +1093,14 @@ body {
   padding: clamp(18px, 2vw, 24px);
 }
 
-.results-content-card:last-of-type {
+.results-content-card--suggestions {
   grid-column: 1 / -1;
   grid-row: 2;
+}
+
+.results-content-card--session-code {
+  grid-column: 1 / -1;
+  grid-row: 3;
 }
 
 .results-content-card .score-breakdown,
@@ -1629,6 +1625,12 @@ table tbody tr:last-child td {
   }
 
   .results-content-card:last-of-type {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .results-content-card--suggestions,
+  .results-content-card--session-code {
     grid-column: auto;
     grid-row: auto;
   }

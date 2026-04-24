@@ -1,6 +1,38 @@
 import { describe, it, expect } from "vitest";
 import { calculateAssessment } from "@/lib/scoring";
-import type { AssessmentModel, AnswerMap } from "@/types/assessment";
+import type { AssessmentModel, AnswerMap, ScoreValue } from "@/types/assessment";
+
+// Threshold model: 13 questions in one category, allowing totalScore to reach all four bands.
+// With all answers = 1 → 13 (Disciplined), all = 2 → 26 (Optimized), all = 3 → 39 (Strategic).
+const thresholdModel: AssessmentModel = {
+  title: "Threshold Test",
+  description: "Threshold",
+  scaleLabel: "1–4",
+  categories: [
+    {
+      id: "cat-t",
+      title: "Threshold Category",
+      description: "Coverage for all maturity label boundaries",
+      weight: 1.0,
+      questions: Array.from({ length: 13 }, (_, i) => ({ id: `tq${i}`, text: `TQ${i}` })),
+      recommendations: [
+        { id: "tr1", maxScoreInclusive: 12, title: "R1", action: "A1" },
+        { id: "tr2", maxScoreInclusive: 24, title: "R2", action: "A2" },
+        { id: "tr3", maxScoreInclusive: 36, title: "R3", action: "A3" },
+      ],
+    },
+  ],
+};
+
+// Helper: answer all 13 threshold-model questions with the same value
+function thresholdAnswers(value: ScoreValue): AnswerMap {
+  return Object.fromEntries(Array.from({ length: 13 }, (_, i) => [`tq${i}`, value]));
+}
+
+// Helper: answer exactly n threshold-model questions with value 1 (rest unanswered)
+function thresholdScore(n: number): AnswerMap {
+  return Object.fromEntries(Array.from({ length: n }, (_, i) => [`tq${i}`, 1 as ScoreValue]));
+}
 
 // Minimal model fixture used across tests
 const minimalModel: AssessmentModel = {
@@ -83,27 +115,42 @@ describe("calculateAssessment", () => {
       expect(calculateAssessment(minimalModel, answers).maturityLabel).toBe("Foundational");
     });
 
-    it("labels score >= 13 and < 25 as Disciplined", () => {
-      // The minimal model can only reach 12 max, so test with higher values
-      const answers: AnswerMap = { q1: 1, q2: 1, q3: 1 };
-      expect(["Foundational", "Disciplined"]).toContain(
-        calculateAssessment(minimalModel, answers).maturityLabel,
-      );
+    it("labels score 12 as Foundational and score 13 as Disciplined (lower boundary)", () => {
+      expect(calculateAssessment(thresholdModel, thresholdScore(12)).maturityLabel).toBe("Foundational");
+      expect(calculateAssessment(thresholdModel, thresholdScore(13)).maturityLabel).toBe("Disciplined");
     });
 
-    it("labels score >= 25 and < 37 as Optimized", () => {
-      // The minimal model can only reach 12 max, so test the valid range
-      const answers: AnswerMap = { q1: 2, q2: 2, q3: 2 };
-      expect(["Foundational", "Disciplined", "Optimized"]).toContain(
-        calculateAssessment(minimalModel, answers).maturityLabel,
-      );
+    it("labels score 24 as Disciplined and score 25 as Optimized (mid boundary)", () => {
+      // 24 questions scored 1 would require a bigger model; use 6×4=24 and 7×4=28 instead
+      const score24Answers = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`tq${i}`, 4 as ScoreValue]));
+      const score28Answers = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`tq${i}`, 4 as ScoreValue]));
+      expect(calculateAssessment(thresholdModel, score24Answers).maturityLabel).toBe("Disciplined");
+      expect(calculateAssessment(thresholdModel, score28Answers).maturityLabel).toBe("Optimized");
     });
 
-    it("labels score >= 37 as Strategic", () => {
-      const answers: AnswerMap = { q1: 4, q2: 4, q3: 4 };
-      expect(["Foundational", "Disciplined", "Optimized", "Strategic"]).toContain(
-        calculateAssessment(minimalModel, answers).maturityLabel,
-      );
+    it("labels score 36 as Optimized and score 37 as Strategic (upper boundary)", () => {
+      // 9×4=36, 10×4=40
+      const score36Answers = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`tq${i}`, 4 as ScoreValue]));
+      const score40Answers = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`tq${i}`, 4 as ScoreValue]));
+      expect(calculateAssessment(thresholdModel, score36Answers).maturityLabel).toBe("Optimized");
+      expect(calculateAssessment(thresholdModel, score40Answers).maturityLabel).toBe("Strategic");
+    });
+
+    it("labels all-4 answers as Strategic", () => {
+      // 13 × 4 = 52 → Strategic
+      expect(calculateAssessment(thresholdModel, thresholdAnswers(4)).maturityLabel).toBe("Strategic");
+    });
+
+    it("labels all-1 answers as Disciplined (13 questions × 1 = 13)", () => {
+      expect(calculateAssessment(thresholdModel, thresholdAnswers(1)).maturityLabel).toBe("Disciplined");
+    });
+
+    it("labels all-2 answers as Optimized (13 questions × 2 = 26)", () => {
+      expect(calculateAssessment(thresholdModel, thresholdAnswers(2)).maturityLabel).toBe("Optimized");
+    });
+
+    it("labels all-3 answers as Strategic (13 questions × 3 = 39)", () => {
+      expect(calculateAssessment(thresholdModel, thresholdAnswers(3)).maturityLabel).toBe("Strategic");
     });
   });
 
@@ -202,6 +249,57 @@ describe("calculateAssessment", () => {
       const r1 = calculateAssessment(minimalModel, answers);
       const r2 = calculateAssessment(minimalModel, answers);
       expect(r1).toEqual(r2);
+    });
+
+    it("handles a category with no questions (score and answered both 0)", () => {
+      const emptyQModel: AssessmentModel = {
+        ...minimalModel,
+        categories: [
+          {
+            id: "cat-empty",
+            title: "Empty",
+            description: "No questions",
+            weight: 1.0,
+            questions: [],
+            recommendations: [],
+          },
+        ],
+      };
+      const result = calculateAssessment(emptyQModel, {});
+      expect(result.categories[0].score).toBe(0);
+      expect(result.categories[0].answered).toBe(0);
+      expect(result.overallScore).toBe(0);
+    });
+
+    it("handles a category with no recommendations (returns empty suggestions)", () => {
+      const noRecModel: AssessmentModel = {
+        ...minimalModel,
+        categories: [
+          { ...minimalModel.categories[0], recommendations: [] },
+          minimalModel.categories[1],
+        ],
+      };
+      const result = calculateAssessment(noRecModel, { q1: 1, q2: 1 });
+      expect(result.categories[0].suggestions).toEqual([]);
+    });
+
+    it("computes maxScore as 4 × total questions regardless of answers", () => {
+      const result = calculateAssessment(minimalModel, {});
+      expect(result.maxScore).toBe(minimalModel.categories.flatMap((c) => c.questions).length * 4);
+    });
+
+    it("counts unanswered questions as 0 in totalScore", () => {
+      // q1=2, q2 and q3 unanswered → totalScore = 2
+      const result = calculateAssessment(minimalModel, { q1: 2 });
+      expect(result.totalScore).toBe(2);
+    });
+
+    it("returns exactly 50% completion when half the questions are answered", () => {
+      // minimalModel has 3 questions total (q1,q2 in cat-a, q3 in cat-b)
+      // answering 1 of 2 in cat-a → 1/3 ≈ 33%
+      // answering 2 of 3 → 2/3 ≈ 67%
+      const result = calculateAssessment(minimalModel, { q1: 1, q2: 1 });
+      expect(result.completion).toBe(67);
     });
   });
 });

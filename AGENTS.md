@@ -77,7 +77,7 @@ When a user asks to develop a new feature, agents must deliver all of the follow
 
 1. Implement the feature code using existing architecture and conventions.
 2. Add or update unit tests that cover the new behavior and critical edge cases.
-3. Update documentation to reflect the change (at minimum, relevant sections in `README.md`; update `AGENTS.md` too if repository rules or workflows changed).
+3. Update documentation to reflect the change (at minimum, relevant sections in `README.md` for product changes or `TECHNICAL.md` for engineering changes; update `AGENTS.md` too if repository rules or workflows changed).
 
 Before finishing feature work, run validation gates:
 

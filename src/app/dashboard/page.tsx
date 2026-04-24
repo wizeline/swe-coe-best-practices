@@ -1,27 +1,22 @@
-"use client";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { DashboardView } from "@/components/assessment/DashboardView";
 
-import dynamic from "next/dynamic";
+export default async function DashboardPage() {
+  const session = await auth();
+  const userEmail = session?.user?.email;
 
-const DashboardView = dynamic(
-  () => import("@/components/assessment/DashboardView").then((mod) => mod.DashboardView),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="card form-card">
-        <p>Loading results...</p>
-      </div>
-    ),
-  },
-);
+  if (!userEmail) {
+    redirect("/login?callbackUrl=/dashboard");
+  }
 
-export default function DashboardPage() {
   return (
     <section className="page-container">
       <div className="page-header">
         <h1>Best Practices Framework Assessment Results</h1>
-        <p>Review your assessment results, team metrics, and recommended actions.</p>
+        <p>Review your latest assessment results and recommended actions.</p>
       </div>
-      <DashboardView />
+      <DashboardView userEmail={userEmail} />
     </section>
   );
 }

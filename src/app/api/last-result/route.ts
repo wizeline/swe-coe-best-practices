@@ -1,14 +1,19 @@
 import { Prisma } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { AssessmentResult, LastResultRecord } from "@/types/assessment";
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email")?.toLowerCase().trim();
+async function getSessionEmail(): Promise<string | null> {
+  const session = await auth();
+  return session?.user?.email?.toLowerCase().trim() ?? null;
+}
+
+export async function GET() {
+  const email = await getSessionEmail();
 
   if (!email) {
-    return NextResponse.json({ data: null });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const record = await prisma.lastResult.findUnique({ where: { email } });
@@ -26,13 +31,15 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ data });
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: Request) {
+  const email = await getSessionEmail();
+  if (!email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = (await request.json()) as {
-    email?: string;
     result?: AssessmentResult;
   };
-
-  const email = body.email?.toLowerCase().trim();
 
   if (!email || !body.result) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });

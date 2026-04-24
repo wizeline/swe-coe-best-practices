@@ -1,39 +1,16 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { assessmentTemplate } from "@/data/assessmentTemplate";
-import {
-  buildTeamStats,
-  getLatestSubmissionByEmail,
-  loadAllSubmissions,
-} from "@/lib/storage";
-import { AssessmentResult, SubmissionRecord, TeamStats } from "@/types/assessment";
+import { getLatestSubmissionByEmail } from "@/lib/storage";
+import { AssessmentResult, SubmissionRecord } from "@/types/assessment";
 
-interface DashboardState {
-  userSubmission: SubmissionRecord | null;
-  teamStats: TeamStats;
+interface DashboardViewProps {
+  userEmail: string;
 }
 
-const emptyTeamStats: TeamStats = {
-  totalSubmissions: 0,
-  uniqueParticipants: 0,
-  averageTotalScore: 0,
-  maxTotalScore: 0,
-  categoryAverages: {},
-  submissionsByEmail: {},
-};
-
-export function DashboardView() {
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email");
-
-  const [state, setState] = useState<DashboardState>({
-    userSubmission: null,
-    teamStats: emptyTeamStats,
-  });
+export function DashboardView({ userEmail }: DashboardViewProps) {
+  const [userSubmission, setUserSubmission] = useState<SubmissionRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"individual" | "team">("team");
 
   useEffect(() => {
     let active = true;
@@ -41,22 +18,14 @@ export function DashboardView() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const [allSubmissions, userSubmission] = await Promise.all([
-          loadAllSubmissions(),
-          email ? getLatestSubmissionByEmail(email) : Promise.resolve(null),
-        ]);
-
-        if (!active) {
-          return;
+        const latest = await getLatestSubmissionByEmail();
+        if (active) {
+          setUserSubmission(latest);
         }
-
-        const teamStats = buildTeamStats(allSubmissions);
-        setState({ userSubmission, teamStats });
-        setViewMode(userSubmission ? "individual" : "team");
       } catch (error) {
         console.error("Dashboard load error:", error);
         if (active) {
-          setState({ userSubmission: null, teamStats: emptyTeamStats });
+          setUserSubmission(null);
         }
       } finally {
         if (active) {
@@ -70,7 +39,7 @@ export function DashboardView() {
     return () => {
       active = false;
     };
-  }, [email]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -80,10 +49,10 @@ export function DashboardView() {
     );
   }
 
-  if (!state.userSubmission && !state.teamStats.totalSubmissions) {
+  if (!userSubmission) {
     return (
       <div className="card form-card">
-        <p>No assessment data found. Please complete the form first.</p>
+        <p>No assessment data found for your account yet.</p>
         <div className="empty-actions">
           <a href="/assessment" className="button solid">
             Go to Assessment Form
@@ -93,41 +62,12 @@ export function DashboardView() {
     );
   }
 
-  const showTeamMode = state.teamStats && state.teamStats.totalSubmissions > 0;
-
-  return (
-    <div>
-      {showTeamMode && (
-        <div className="view-toggle">
-          <button
-            className={`toggle-btn ${viewMode === "individual" ? "active" : ""}`}
-            onClick={() => setViewMode("individual")}
-          >
-            My Results
-          </button>
-          <button
-            className={`toggle-btn ${viewMode === "team" ? "active" : ""}`}
-            onClick={() => setViewMode("team")}
-          >
-            Team Overview ({state.teamStats.uniqueParticipants} people)
-          </button>
-        </div>
-      )}
-
-      {viewMode === "individual" && state.userSubmission && (
-        <ScoreCard result={state.userSubmission.result} email={state.userSubmission.email} />
-      )}
-
-      {viewMode === "team" && state.teamStats && (
-        <TeamView stats={state.teamStats} assessmentTemplate={assessmentTemplate} />
-      )}
-    </div>
-  );
+  return <ScoreCard result={userSubmission.result} email={userEmail} />;
 }
 
 interface ScoreCardProps {
   result: AssessmentResult;
-  email?: string;
+  email: string;
 }
 
 function ScoreCard({ result, email }: ScoreCardProps) {
@@ -155,31 +95,30 @@ function ScoreCard({ result, email }: ScoreCardProps) {
           <div className="progress-bar" style={{ width: `${result.completion}%` }} />
         </div>
         <p className="progress-label">Completion {result.completion}%</p>
-        {email && <p className="email-badge">Submitted by: {email}</p>}
+        <p className="email-badge">Submitted by: {email}</p>
       </article>
 
-      <article className="card results-content-card">
-        <section className="score-breakdown">
-          <h3>Category Breakdown</h3>
-          {result.categories.map((category) => (
-            <div key={category.id} className="breakdown-row">
-              <span>{category.title}</span>
-              <strong>{category.score.toFixed(1)}</strong>
-            </div>
-          ))}
+      <aside className="card dashboard-side-card">
+        <section className="dashboard-side-section">
+          <div className="score-breakdown">
+            <h3>Category Breakdown</h3>
+            {result.categories.map((category) => (
+              <div key={category.id} className="breakdown-row">
+                <span>{category.title}</span>
+                <strong>{category.score.toFixed(1)}</strong>
+              </div>
+            ))}
+          </div>
         </section>
-      </article>
 
-      <aside className="card actions-card">
-        <h3>Actions</h3>
-        <div className="actions">
-          <a href="/assessment" className="button solid">
-            New Assessment
-          </a>
-          <a href="/dashboard" className="button ghost">
-            View Team
-          </a>
-        </div>
+        <section className="dashboard-side-section dashboard-side-section--actions">
+          <h3>Actions</h3>
+          <div className="actions">
+            <a href="/assessment" className="button solid">
+              New Assessment
+            </a>
+          </div>
+        </section>
       </aside>
 
       <article className="card results-content-card">
@@ -201,120 +140,6 @@ function ScoreCard({ result, email }: ScoreCardProps) {
           )}
         </section>
       </article>
-    </div>
-  );
-}
-
-interface TeamViewProps {
-  stats: TeamStats;
-  assessmentTemplate: typeof assessmentTemplate;
-}
-
-function TeamView({ stats, assessmentTemplate }: TeamViewProps) {
-  const handleExportTeam = async () => {
-    try {
-      const allSubmissions = await loadAllSubmissions();
-      const payload = {
-        generatedAt: new Date().toISOString(),
-        teamStats: stats,
-        allSubmissions,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "team-best-practices-framework-results.json";
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Export error:", error);
-    }
-  };
-
-  return (
-    <div className="team-view">
-      <div className="dashboard-grid">
-        <article className="card team-summary">
-          <h3>Team Summary</h3>
-          <div className="summary-stats">
-            <div className="stat-item">
-              <span className="stat-label">Team Average Score</span>
-              <span className="stat-value">{stats.averageTotalScore.toFixed(1)}/{stats.maxTotalScore}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Participants</span>
-              <span className="stat-value">{stats.uniqueParticipants}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Total Responses</span>
-              <span className="stat-value">{stats.totalSubmissions}</span>
-            </div>
-          </div>
-        </article>
-
-        <article className="card category-average-card">
-          <section className="score-breakdown">
-            <h3>Average by Category</h3>
-            {assessmentTemplate.categories.map((category) => {
-              const avgScore = stats.categoryAverages[category.id] || 0;
-              return (
-                <div key={category.id} className="breakdown-row">
-                  <span>{category.title}</span>
-                  <strong>{avgScore.toFixed(1)}</strong>
-                </div>
-              );
-            })}
-          </section>
-        </article>
-      </div>
-
-      <div className="submissions-table">
-        <h3>Individual Submissions</h3>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Overall Score</th>
-                <th>Completion</th>
-                <th>Status</th>
-                <th>Submitted</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(stats.submissionsByEmail).map(([emailAddr, submissions]) => {
-                const latest = submissions[submissions.length - 1];
-                return (
-                  <tr key={emailAddr}>
-                    <td>{emailAddr}</td>
-                    <td className="score-cell">
-                      <strong>{latest.result.totalScore}/{latest.result.maxScore}</strong>
-                    </td>
-                    <td>{latest.result.completion}%</td>
-                    <td>
-                      <span className="status-badge">{latest.result.maturityLabel}</span>
-                    </td>
-                    <td className="date-cell">
-                      {new Date(latest.submittedAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="team-actions">
-        <button onClick={handleExportTeam} className="button solid">
-          Export Team Results
-        </button>
-        <a href="/assessment" className="button ghost">
-          New Assessment
-        </a>
-      </div>
     </div>
   );
 }

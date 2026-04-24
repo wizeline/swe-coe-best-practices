@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { calculateAssessment } from "@/lib/scoring";
 import { addSubmission, clearDraft, loadDraft, saveDraft, saveLastResult } from "@/lib/storage";
@@ -14,7 +15,7 @@ const scaleConfig: { value: ScoreValue; label: string; color: string }[] = [
 ];
 
 interface AssessmentFormProps {
-  onSubmit?: (email: string) => void;
+  userEmail: string;
 }
 
 const SCORE_COLORS: Record<string, string> = {
@@ -86,19 +87,42 @@ function HintToggle({ text }: { text: string }) {
   );
 }
 
-export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
+export function AssessmentForm({ userEmail }: AssessmentFormProps) {
+  const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [currentPillar, setCurrentPillar] = useState(0);
-  const [showEmailGate, setShowEmailGate] = useState(true);
-  const [emailInput, setEmailInput] = useState("");
-  const [participantEmail, setParticipantEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [formError, setFormError] = useState("");
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalPillars = assessmentTemplate.categories.length;
   const activeCategory = assessmentTemplate.categories[currentPillar];
+
+  useEffect(() => {
+    let active = true;
+
+    async function fetchDraft() {
+      setIsLoadingDraft(true);
+      try {
+        const draft = await loadDraft();
+        if (active) {
+          setAnswers(draft);
+        }
+      } catch (error) {
+        console.error("Draft load error:", error);
+      } finally {
+        if (active) {
+          setIsLoadingDraft(false);
+        }
+      }
+    }
+
+    void fetchDraft();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const updateAnswer = (questionId: string, value: ScoreValue) => {
     const updated = { ...answers, [questionId]: value };
@@ -109,11 +133,9 @@ export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
 
     setAnswers(updated);
 
-    if (participantEmail) {
-      void saveDraft(participantEmail, updated).catch((error) => {
-        console.error("Draft save error:", error);
-      });
-    }
+    void saveDraft(updated).catch((error) => {
+      console.error("Draft save error:", error);
+    });
 
     if (isCurrentPillarDone && currentPillar < totalPillars - 1) {
       setCurrentPillar(currentPillar + 1);
@@ -130,32 +152,7 @@ export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
     setCurrentPillar((prev) => Math.min(prev + 1, totalPillars - 1));
   };
 
-  const validateEmail = (value: string): boolean =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-  const handleUnlockQuestions = async () => {
-    const trimmedEmail = emailInput.trim();
-    if (!trimmedEmail) { setEmailError("Email is required"); return; }
-    if (!validateEmail(trimmedEmail)) { setEmailError("Please enter a valid email"); return; }
-    const normalizedEmail = trimmedEmail.toLowerCase();
-
-    setIsLoadingDraft(true);
-    try {
-      const draft = await loadDraft(normalizedEmail);
-      setAnswers(draft);
-    } catch (error) {
-      console.error("Draft load error:", error);
-    } finally {
-      setIsLoadingDraft(false);
-    }
-
-    setParticipantEmail(normalizedEmail);
-    setShowEmailGate(false);
-    setEmailError("");
-  };
-
   const handleSubmit = async () => {
-    if (!participantEmail) { setShowEmailGate(true); return; }
     if (answered < total) {
       setFormError(`${total - answered} question${total - answered > 1 ? "s" : ""} still need a score.`);
       return;
@@ -164,10 +161,10 @@ export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
     setFormError("");
     try {
       const result = calculateAssessment(assessmentTemplate, answers);
-      await addSubmission(participantEmail, answers, result);
-      await saveLastResult(participantEmail, result);
-      await clearDraft(participantEmail);
-      onSubmit?.(participantEmail);
+      await addSubmission(answers, result);
+      await saveLastResult(result);
+      await clearDraft();
+      router.push("/dashboard");
     } catch (error) {
       setFormError("Failed to submit. Please try again.");
       console.error("Submission error:", error);
@@ -178,12 +175,9 @@ export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
 
   const handleReset = () => {
     setAnswers({});
-    if (participantEmail) {
-      void clearDraft(participantEmail).catch((error) => {
-        console.error("Draft clear error:", error);
-      });
-    }
-    setEmailError("");
+    void clearDraft().catch((error) => {
+      console.error("Draft clear error:", error);
+    });
     setFormError("");
   };
 
@@ -199,49 +193,15 @@ export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
 
   return (
     <div>
-      {showEmailGate && (
-        <div className="modal-overlay" aria-modal="true" role="dialog" aria-labelledby="email-gate-title">
-          <div className="modal-content" role="document">
-            <h3 id="email-gate-title">Enter Your Email</h3>
-            <p>We&apos;ll attach your answers to this email and include them in team averages.</p>
-            <div className="form-group">
-              <label htmlFor="email-input">Email Address</label>
-              <input
-                id="email-input"
-                type="email"
-                value={emailInput}
-                onChange={(e) => { setEmailInput(e.target.value); if (emailError) setEmailError(""); }}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleUnlockQuestions(); } }}
-                placeholder="you@wizeline.com"
-                autoFocus
-                aria-invalid={!!emailError}
-                aria-describedby={emailError ? "email-error" : undefined}
-              />
-              {emailError && <span id="email-error" className="error-message">{emailError}</span>}
-            </div>
-            <div className="modal-actions">
-              <a href="/dashboard" className="button ghost">Back to Dashboard</a>
-              <button
-                type="button"
-                onClick={handleUnlockQuestions}
-                className="button solid"
-                disabled={isLoadingDraft}
-              >
-                {isLoadingDraft ? "Loading..." : "Continue"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <article className="card form-card">
         {/* ── Header ── */}
         <header className="card-header">
           <div className="form-header-row">
             <h2>{assessmentTemplate.title}</h2>
-            {!showEmailGate && <span className="email-badge">{participantEmail}</span>}
+            <span className="email-badge">{userEmail}</span>
           </div>
           <p>{assessmentTemplate.description}</p>
+          {isLoadingDraft && <p>Loading your saved draft...</p>}
 
           {/* Scale legend strip */}
           <div className="scale-legend" aria-label="Scoring scale reference">
@@ -370,7 +330,7 @@ export function AssessmentForm({ onSubmit }: AssessmentFormProps) {
                 onClick={handleSubmit}
                 className="button solid"
                 aria-label="Submit assessment"
-                disabled={isSubmitting || showEmailGate}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting…" : "Submit"}
               </button>

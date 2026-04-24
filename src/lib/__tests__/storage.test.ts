@@ -5,7 +5,6 @@ import {
   clearDraft,
   deleteSubmission,
   getLatestSubmissionByEmail,
-  getSubmissionsByEmail,
   loadAllSubmissions,
   loadDraft,
   loadLastResult,
@@ -50,47 +49,46 @@ beforeEach(() => {
 });
 
 describe("draft API storage", () => {
-  it("loads draft answers by email", async () => {
+  it("loads draft answers for the current session", async () => {
     mockJsonResponse({ answers: { q1: 2, q2: 3 } });
 
-    await expect(loadDraft("dev@example.com")).resolves.toEqual({ q1: 2, q2: 3 });
+    await expect(loadDraft()).resolves.toEqual({ q1: 2, q2: 3 });
     expect(mockFetch).toHaveBeenCalledWith(
-      "/api/drafts?email=dev%40example.com",
+      "/api/drafts",
       expect.objectContaining({ headers: expect.any(Object) }),
     );
   });
 
-  it("saves draft answers with normalized email", async () => {
+  it("saves draft answers without sending email", async () => {
     mockJsonResponse({ ok: true });
 
-    await saveDraft("Dev@Example.com", { q1: 4 });
+    await saveDraft({ q1: 4 });
 
     expect(mockFetch).toHaveBeenCalledWith(
       "/api/drafts",
       expect.objectContaining({
         method: "PUT",
-        body: JSON.stringify({ email: "dev@example.com", answers: { q1: 4 } }),
+        body: JSON.stringify({ answers: { q1: 4 } }),
       }),
     );
   });
 
-  it("clears a draft for an email", async () => {
+  it("clears the current session draft", async () => {
     mockJsonResponse({ ok: true });
 
-    await clearDraft("dev@example.com");
+    await clearDraft();
 
     expect(mockFetch).toHaveBeenCalledWith(
       "/api/drafts",
       expect.objectContaining({
         method: "DELETE",
-        body: JSON.stringify({ email: "dev@example.com" }),
       }),
     );
   });
 });
 
 describe("submission API storage", () => {
-  it("adds submission with normalized email", async () => {
+  it("adds submission without sending email", async () => {
     const payload: SubmissionRecord = {
       id: "sub-1",
       email: "dev@example.com",
@@ -100,14 +98,13 @@ describe("submission API storage", () => {
     };
     mockJsonResponse(payload, true, 201);
 
-    await expect(addSubmission(" Dev@Example.com ", { q1: 3 }, makeResult(3))).resolves.toEqual(payload);
+    await expect(addSubmission({ q1: 3 }, makeResult(3))).resolves.toEqual(payload);
 
     expect(mockFetch).toHaveBeenCalledWith(
       "/api/submissions",
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
-          email: "dev@example.com",
           answers: { q1: 3 },
           result: makeResult(3),
         }),
@@ -115,19 +112,7 @@ describe("submission API storage", () => {
     );
   });
 
-  it("loads submissions filtered by email", async () => {
-    const payload: SubmissionRecord[] = [];
-    mockJsonResponse(payload);
-
-    await expect(getSubmissionsByEmail("dev@example.com")).resolves.toEqual(payload);
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      "/api/submissions?email=dev%40example.com",
-      expect.objectContaining({ headers: expect.any(Object) }),
-    );
-  });
-
-  it("loads latest submission by email", async () => {
+  it("loads latest submission for current session", async () => {
     const payload: SubmissionRecord = {
       id: "sub-2",
       email: "dev@example.com",
@@ -137,10 +122,10 @@ describe("submission API storage", () => {
     };
     mockJsonResponse(payload);
 
-    await expect(getLatestSubmissionByEmail("dev@example.com")).resolves.toEqual(payload);
+    await expect(getLatestSubmissionByEmail()).resolves.toEqual(payload);
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "/api/submissions?email=dev%40example.com&latest=true",
+      "/api/submissions?latest=true",
       expect.objectContaining({ headers: expect.any(Object) }),
     );
   });
@@ -171,13 +156,13 @@ describe("last result API storage", () => {
   it("saves last result", async () => {
     mockJsonResponse({ ok: true });
 
-    await saveLastResult("USER@example.com", makeResult(2));
+    await saveLastResult(makeResult(2));
 
     expect(mockFetch).toHaveBeenCalledWith(
       "/api/last-result",
       expect.objectContaining({
         method: "PUT",
-        body: JSON.stringify({ email: "user@example.com", result: makeResult(2) }),
+        body: JSON.stringify({ result: makeResult(2) }),
       }),
     );
   });
@@ -192,7 +177,7 @@ describe("last result API storage", () => {
       },
     });
 
-    await expect(loadLastResult("user@example.com")).resolves.toEqual(
+    await expect(loadLastResult()).resolves.toEqual(
       expect.objectContaining({ email: "user@example.com", result }),
     );
   });

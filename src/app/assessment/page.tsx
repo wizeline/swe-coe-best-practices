@@ -1,14 +1,14 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { AssessmentForm } from "@/components/assessment/AssessmentForm";
 
-export default function AssessmentPage() {
-  const router = useRouter();
+export default async function AssessmentPage() {
+  const session = await auth();
+  const userEmail = session?.user?.email;
 
-  const handleSubmit = (email: string) => {
-    router.push(`/dashboard?email=${encodeURIComponent(email)}`);
-  };
+  if (!userEmail) {
+    redirect("/login?callbackUrl=/assessment");
+  }
 
   return (
     <section className="page-container">
@@ -16,7 +16,7 @@ export default function AssessmentPage() {
         <h1>Assessment Form</h1>
         <p>Fill out this form to evaluate your engineering team&apos;s Best Practices Framework maturity.</p>
       </div>
-      <AssessmentForm onSubmit={handleSubmit} />
+      <AssessmentForm userEmail={userEmail} />
     </section>
   );
 }

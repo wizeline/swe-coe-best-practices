@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { auth, signOut } from "@/auth";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -20,11 +21,14 @@ export const metadata: Metadata = {
     "Internal POC to assess engineering best practices maturity and improvement opportunities.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+  const userEmail = session?.user?.email;
+
   return (
     <html
       lang="en"
@@ -37,15 +41,33 @@ export default function RootLayout({
               Best Practices Pulse
             </Link>
             <ul className="nav-links">
-              <li>
-                <Link href="/dashboard">Home</Link>
-              </li>
-              <li>
-                <Link href="/assessment">Assessment</Link>
-              </li>
-              <li>
-                <Link href="/dashboard">Dashboard</Link>
-              </li>
+              {userEmail ? (
+                <>
+                  <li>
+                    <Link href="/assessment">Assessment</Link>
+                  </li>
+                  <li>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </li>
+                  <li>
+                    <span className="email-badge">{userEmail}</span>
+                  </li>
+                  <li>
+                    <form
+                      action={async () => {
+                        "use server";
+                        await signOut({ redirectTo: "/login" });
+                      }}
+                    >
+                      <button type="submit" className="button ghost">Sign out</button>
+                    </form>
+                  </li>
+                </>
+              ) : (
+                <li>
+                  <Link href="/login">Login</Link>
+                </li>
+              )}
             </ul>
           </nav>
           {children}

@@ -7,10 +7,6 @@ import {
   TeamStats,
 } from "@/types/assessment";
 
-function normalizeEmail(email: string): string {
-  return email.toLowerCase().trim();
-}
-
 async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     ...init,
@@ -27,52 +23,43 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function saveDraft(email: string, answers: AnswerMap): Promise<void> {
+export async function saveDraft(answers: AnswerMap): Promise<void> {
   await requestJson("/api/drafts", {
     method: "PUT",
-    body: JSON.stringify({ email: normalizeEmail(email), answers }),
+    body: JSON.stringify({ answers }),
   });
 }
 
-export async function loadDraft(email: string): Promise<AnswerMap> {
-  const normalized = normalizeEmail(email);
-  const result = await requestJson<{ answers: AnswerMap | null }>(
-    `/api/drafts?email=${encodeURIComponent(normalized)}`,
-  );
+export async function loadDraft(): Promise<AnswerMap> {
+  const result = await requestJson<{ answers: AnswerMap | null }>("/api/drafts");
   return result.answers ?? {};
 }
 
-export async function clearDraft(email: string): Promise<void> {
-  const normalized = normalizeEmail(email);
+export async function clearDraft(): Promise<void> {
   await requestJson("/api/drafts", {
     method: "DELETE",
-    body: JSON.stringify({ email: normalized }),
   });
 }
 
-export async function saveLastResult(email: string, result: AssessmentResult): Promise<void> {
+export async function saveLastResult(result: AssessmentResult): Promise<void> {
   await requestJson("/api/last-result", {
     method: "PUT",
-    body: JSON.stringify({ email: normalizeEmail(email), result }),
+    body: JSON.stringify({ result }),
   });
 }
 
-export async function loadLastResult(email: string): Promise<LastResultRecord | null> {
-  const normalized = normalizeEmail(email);
-  const result = await requestJson<{ data: LastResultRecord | null }>(
-    `/api/last-result?email=${encodeURIComponent(normalized)}`,
-  );
+export async function loadLastResult(): Promise<LastResultRecord | null> {
+  const result = await requestJson<{ data: LastResultRecord | null }>("/api/last-result");
   return result.data;
 }
 
 export async function addSubmission(
-  email: string,
   answers: AnswerMap,
   result: AssessmentResult,
 ): Promise<SubmissionRecord> {
   return requestJson<SubmissionRecord>("/api/submissions", {
     method: "POST",
-    body: JSON.stringify({ email: normalizeEmail(email), answers, result }),
+    body: JSON.stringify({ answers, result }),
   });
 }
 
@@ -80,18 +67,12 @@ export async function loadAllSubmissions(): Promise<SubmissionRecord[]> {
   return requestJson<SubmissionRecord[]>("/api/submissions");
 }
 
-export async function getSubmissionsByEmail(email: string): Promise<SubmissionRecord[]> {
-  const normalized = normalizeEmail(email);
-  return requestJson<SubmissionRecord[]>(
-    `/api/submissions?email=${encodeURIComponent(normalized)}`,
-  );
+export async function getSubmissionsByEmail(): Promise<SubmissionRecord[]> {
+  return requestJson<SubmissionRecord[]>("/api/submissions");
 }
 
-export async function getLatestSubmissionByEmail(email: string): Promise<SubmissionRecord | null> {
-  const normalized = normalizeEmail(email);
-  return requestJson<SubmissionRecord | null>(
-    `/api/submissions?email=${encodeURIComponent(normalized)}&latest=true`,
-  );
+export async function getLatestSubmissionByEmail(): Promise<SubmissionRecord | null> {
+  return requestJson<SubmissionRecord | null>("/api/submissions?latest=true");
 }
 
 export function buildTeamStats(submissions: SubmissionRecord[]): TeamStats {

@@ -6,6 +6,7 @@ Internal Next.js tool for assessing engineering maturity. Developers score 14 pr
 
 - Next.js 16 (App Router, TypeScript strict)
 - Plain CSS (no Tailwind)
+- Auth.js (NextAuth v5) with Google provider
 - Prisma ORM + Next.js API routes for persistence
 - SQLite by default for local development (can be switched to Postgres)
 
@@ -13,9 +14,10 @@ Internal Next.js tool for assessing engineering maturity. Developers score 14 pr
 
 | Route | Purpose |
 | ----- | ------- |
-| / | Redirects to /dashboard |
-| /assessment | 14-question self-assessment form with email gate |
-| /dashboard | Individual results + team aggregation view |
+| / | Redirects based on auth state |
+| /login | Google sign-in page |
+| /assessment | 14-question self-assessment form (auth required) |
+| /dashboard | Latest personal result for logged-in user (auth required) |
 
 ## Scoring Scale
 
@@ -37,19 +39,25 @@ Raw score range: 0-48 (14 questions x 4 levels)
 npm install
 ```
 
-2. Configure environment variables:
+1. Configure environment variables:
 
 ```bash
 cp .env.example .env
 ```
 
-3. Create the local database:
+Required auth variables:
+
+- GOOGLE_CLIENT_ID
+- GOOGLE_CLIENT_SECRET
+- AUTH_SECRET
+
+1. Create the local database:
 
 ```bash
 npm run prisma:migrate:dev
 ```
 
-4. Start development server:
+1. Start development server:
 
 ```bash
 npm run dev
@@ -75,7 +83,7 @@ npm run prisma:migrate:deploy # run production DB migrations
 
 For production deploys, use a managed Postgres database (do not use SQLite for production on Vercel).
 
-1. Set `DATABASE_URL` in Vercel project environment variables.
+1. Set `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `AUTH_SECRET` in Vercel project environment variables.
 2. Use this Build Command in Vercel:
 
 ```bash
@@ -107,6 +115,7 @@ Prisma models:
 - Draft: in-progress answers by email
 - LastResult: latest result snapshot by email
 
+All assessment data is scoped to the authenticated session email on the server.
 Client components should use src/lib/storage.ts. Do not call Prisma directly from client-side code.
 
 ## Validate

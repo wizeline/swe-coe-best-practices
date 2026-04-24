@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { AnswerMap, AssessmentResult, SubmissionRecord } from "@/types/assessment";
 
@@ -20,11 +21,16 @@ function toSubmissionRecord(data: {
 }
 
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase().trim();
+  if (!email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email")?.toLowerCase().trim();
   const latestOnly = searchParams.get("latest") === "true";
 
-  if (email && latestOnly) {
+  if (latestOnly) {
     const latest = await prisma.submission.findFirst({
       where: { email },
       orderBy: { submittedAt: "desc" },
@@ -37,10 +43,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(toSubmissionRecord(latest));
   }
 
-  const where = email ? { email } : undefined;
-
   const submissions = await prisma.submission.findMany({
-    where,
+    where: { email },
     orderBy: { submittedAt: "asc" },
   });
 
@@ -48,13 +52,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase().trim();
+  if (!email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = (await request.json()) as {
-    email?: string;
     answers?: AnswerMap;
     result?: AssessmentResult;
   };
-
-  const email = body.email?.toLowerCase().trim();
 
   if (!email || !body.answers || !body.result) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });

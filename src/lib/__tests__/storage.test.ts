@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assessmentTemplate } from "@/data/assessmentTemplate";
 import {
   addSubmission,
   buildTeamStats,
@@ -277,6 +278,7 @@ describe("buildTeamStats", () => {
     expect(stats.averageTotalScore).toBe(0);
     expect(stats.maxTotalScore).toBeGreaterThan(0);
     expect(stats.categoryAverages).toEqual({});
+    expect(stats.categorySuggestions).toEqual({});
     expect(stats.submissionsByEmail).toEqual({});
   });
 
@@ -312,6 +314,59 @@ describe("buildTeamStats", () => {
     expect(stats.averageTotalScore).toBe(20);
     expect(stats.maxTotalScore).toBe(48);
     expect(stats.categoryAverages["cat-a"]).toBe(3);
+    expect(stats.categorySuggestions["cat-a"]).toEqual([]);
     expect(Object.keys(stats.submissionsByEmail)).toHaveLength(2);
+  });
+
+  it("derives team action items when category ids match template", () => {
+    const category = assessmentTemplate.categories[0];
+    const submissions: SubmissionRecord[] = [
+      {
+        id: "p-1",
+        email: "one@test.com",
+        answers: { q1: 1 },
+        result: {
+          ...makeResult(2, 12, 48),
+          categories: [
+            {
+              id: category.id,
+              title: category.title,
+              score: 2,
+              answered: category.questions.length,
+              total: category.questions.length,
+              weight: category.weight,
+              suggestions: [],
+            },
+          ],
+        },
+        submittedAt: "2026-04-23T00:00:00.000Z",
+      },
+      {
+        id: "p-2",
+        email: "two@test.com",
+        answers: { q1: 3 },
+        result: {
+          ...makeResult(3, 18, 48),
+          categories: [
+            {
+              id: category.id,
+              title: category.title,
+              score: 3,
+              answered: category.questions.length,
+              total: category.questions.length,
+              weight: category.weight,
+              suggestions: [],
+            },
+          ],
+        },
+        submittedAt: "2026-04-23T01:00:00.000Z",
+      },
+    ];
+
+    const stats = buildTeamStats(submissions);
+
+    expect(stats.categoryAverages[category.id]).toBe(2.5);
+    expect(stats.categorySuggestions[category.id]).toHaveLength(2);
+    expect(stats.categorySuggestions[category.id][0].id).toBe(category.recommendations[0].id);
   });
 });

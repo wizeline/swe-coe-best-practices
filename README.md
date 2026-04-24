@@ -19,6 +19,8 @@ Internal Next.js tool for assessing engineering maturity. Developers score 14 pr
 | /assessment | Individual or team-session voting form (auth required) |
 | /dashboard | Personal results + owned team session reports (auth required) |
 
+Team session reports include aggregated action items by category, based on team average results for each pillar.
+
 ## Scoring Scale
 
 Per-question scale: 1-4 (Foundational -> Strategic)
@@ -51,7 +53,23 @@ Required auth variables:
 - GOOGLE_CLIENT_SECRET
 - AUTH_SECRET
 
-1. Create the local database:
+1. Start local PostgreSQL with Docker:
+
+```bash
+docker run --name swe-postgres \
+  -e POSTGRES_PASSWORD=secret \
+  -e POSTGRES_DB=swe_dev \
+  -p 5432:5432 \
+  -d postgres:16
+```
+
+Set `DATABASE_URL` in `.env` to:
+
+```bash
+DATABASE_URL="postgresql://postgres:secret@localhost:5432/swe_dev"
+```
+
+1. Create/update the local database schema:
 
 ```bash
 npm run prisma:migrate:dev
@@ -64,6 +82,26 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Local Docker Workflow
+
+Start database container:
+
+```bash
+docker start swe-postgres
+```
+
+Stop database container:
+
+```bash
+docker stop swe-postgres
+```
+
+Remove database container (cleanup):
+
+```bash
+docker rm -f swe-postgres
+```
 
 ## Scripts
 

@@ -136,14 +136,25 @@ export function buildTeamStats(submissions: SubmissionRecord[]): TeamStats {
   );
 
   const categoryAverages: Record<string, number> = {};
+  const categorySuggestions: Record<string, TeamStats["categorySuggestions"][string]> = {};
   if (submissions.length > 0) {
     const categoryCount = submissions[0].result.categories.length;
     for (let i = 0; i < categoryCount; i++) {
       const categoryScores = submissions.map((s) => s.result.categories[i].score);
       const categoryId = submissions[0].result.categories[i].id;
-      categoryAverages[categoryId] = Number(
+      const averageScore = Number(
         (categoryScores.reduce((a, b) => a + b, 0) / categoryScores.length).toFixed(2),
       );
+
+      categoryAverages[categoryId] = averageScore;
+
+      const categoryTemplate = assessmentTemplate.categories.find((category) => category.id === categoryId);
+      categorySuggestions[categoryId] = categoryTemplate
+        ? [...categoryTemplate.recommendations]
+          .sort((a, b) => a.maxScoreInclusive - b.maxScoreInclusive)
+          .filter((item) => averageScore <= item.maxScoreInclusive)
+          .slice(0, 2)
+        : [];
     }
   }
 
@@ -153,6 +164,7 @@ export function buildTeamStats(submissions: SubmissionRecord[]): TeamStats {
     averageTotalScore,
     maxTotalScore,
     categoryAverages,
+    categorySuggestions,
     submissionsByEmail,
   };
 }

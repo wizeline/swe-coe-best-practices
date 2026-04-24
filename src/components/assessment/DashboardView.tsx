@@ -25,6 +25,7 @@ const emptyTeamStats: TeamStats = {
   averageTotalScore: 0,
   maxTotalScore: 0,
   categoryAverages: {},
+  categorySuggestions: {},
   submissionsByEmail: {},
 };
 
@@ -42,6 +43,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const canShowTeamView = Boolean(selectedSession?.isOwner);
+  const isSessionView = Boolean(selectedSession);
 
   useEffect(() => {
     let active = true;
@@ -155,23 +157,25 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
   if (!userSubmission && !canShowTeamView) {
     return (
       <div className="dashboard-shell">
-        <SessionHub
-          ownedSessions={ownedSessions}
-          onDeleteSession={handleDeleteSession}
-          deletingSessionId={deletingSessionId}
-          joinSessionCode={joinSessionCode}
-          onJoinSessionCodeChange={(value) => {
-            setJoinSessionCode(value);
-            setJoinSessionError("");
-          }}
-          onJoinSession={handleJoinSession}
-          newSessionName={newSessionName}
-          onNewSessionNameChange={setNewSessionName}
-          onCreateSession={handleCreateSession}
-          isCreatingSession={isCreatingSession}
-          sessionError={sessionError}
-          joinSessionError={joinSessionError}
-        />
+        {!isSessionView && (
+          <SessionHub
+            ownedSessions={ownedSessions}
+            onDeleteSession={handleDeleteSession}
+            deletingSessionId={deletingSessionId}
+            joinSessionCode={joinSessionCode}
+            onJoinSessionCodeChange={(value) => {
+              setJoinSessionCode(value);
+              setJoinSessionError("");
+            }}
+            onJoinSession={handleJoinSession}
+            newSessionName={newSessionName}
+            onNewSessionNameChange={setNewSessionName}
+            onCreateSession={handleCreateSession}
+            isCreatingSession={isCreatingSession}
+            sessionError={sessionError}
+            joinSessionError={joinSessionError}
+          />
+        )}
         <div className="card form-card empty-state-card">
           <div className="empty-state-option">
             <div>
@@ -189,24 +193,26 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
 
   return (
     <div className="dashboard-shell">
-      <SessionHub
-        ownedSessions={ownedSessions}
-        selectedSession={selectedSession}
-        onDeleteSession={handleDeleteSession}
-        deletingSessionId={deletingSessionId}
-        joinSessionCode={joinSessionCode}
-        onJoinSessionCodeChange={(value) => {
-          setJoinSessionCode(value);
-          setJoinSessionError("");
-        }}
-        onJoinSession={handleJoinSession}
-        newSessionName={newSessionName}
-        onNewSessionNameChange={setNewSessionName}
-        onCreateSession={handleCreateSession}
-        isCreatingSession={isCreatingSession}
-        sessionError={sessionError}
-        joinSessionError={joinSessionError}
-      />
+      {!isSessionView && (
+        <SessionHub
+          ownedSessions={ownedSessions}
+          selectedSession={selectedSession}
+          onDeleteSession={handleDeleteSession}
+          deletingSessionId={deletingSessionId}
+          joinSessionCode={joinSessionCode}
+          onJoinSessionCodeChange={(value) => {
+            setJoinSessionCode(value);
+            setJoinSessionError("");
+          }}
+          onJoinSession={handleJoinSession}
+          newSessionName={newSessionName}
+          onNewSessionNameChange={setNewSessionName}
+          onCreateSession={handleCreateSession}
+          isCreatingSession={isCreatingSession}
+          sessionError={sessionError}
+          joinSessionError={joinSessionError}
+        />
+      )}
       {canShowTeamView && selectedSession ? (
         <TeamView stats={teamStats} selectedSession={selectedSession} />
       ) : userSubmission ? (
@@ -502,6 +508,24 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
             </section>
           </article>
         </div>
+
+        <article className="card results-content-card">
+          <section className="suggestions">
+            <h3>Team Action Items</h3>
+            {assessmentTemplate.categories.flatMap((category) =>
+              (stats.categorySuggestions[category.id] ?? []).map((suggestion) => (
+                <article key={suggestion.id} className="suggestion-item">
+                  <p className="suggestion-category">{category.title}</p>
+                  <h4>{suggestion.title}</h4>
+                  <p>{suggestion.action}</p>
+                </article>
+              )),
+            )}
+            {assessmentTemplate.categories.every((category) => (stats.categorySuggestions[category.id] ?? []).length === 0) && (
+              <p className="no-suggestions">Not enough team data yet to generate action items.</p>
+            )}
+          </section>
+        </article>
 
         <div className="submissions-table">
           <h3>Individual Submissions</h3>

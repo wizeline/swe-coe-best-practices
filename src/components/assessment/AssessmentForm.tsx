@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
+import { parseHintBullets } from "@/lib/questionOptions";
 import { calculateAssessment } from "@/lib/scoring";
 import { addSubmission, clearDraft, getSessionByCode, loadDraft, saveDraft, saveLastResult } from "@/lib/storage";
 import { AnswerMap, AssessmentSessionRecord, ScoreValue } from "@/types/assessment";
 
-const scaleConfig: { value: ScoreValue; label: string; color: string }[] = [
-  { value: 1, label: "Foundational", color: "#999" },
-  { value: 2, label: "Disciplined",  color: "#f59e0b" },
-  { value: 3, label: "Optimized",    color: "#3b82f6" },
-  { value: 4, label: "Strategic",    color: "#e32c27" },
+const scaleConfig: { value: ScoreValue; label: string }[] = [
+  { value: 1, label: "Foundational" },
+  { value: 2, label: "Disciplined" },
+  { value: 3, label: "Optimized" },
+  { value: 4, label: "Strategic" },
 ];
 
 interface AssessmentFormProps {
@@ -19,74 +20,12 @@ interface AssessmentFormProps {
   initialSessionCode: string | null;
 }
 
-const SCORE_COLORS: Record<string, string> = {
-  "1": "#888",
-  "2": "#d97706",
-  "3": "#2563eb",
-  "4": "#e32c27",
-};
-
 const SCORE_LABELS: Record<string, string> = {
   "1": "Foundational",
   "2": "Disciplined",
   "3": "Optimized",
   "4": "Strategic",
 };
-
-/** Parses "1 = foo · 2 = bar · 3 = baz" into [{score, text}] */
-function parseHintBullets(text: string) {
-  return text
-    .split(" · ")
-    .map((chunk) => {
-      const match = chunk.match(/^(\d+)\s*=\s*(.+)$/);
-      if (!match) return null;
-      return { score: match[1], description: match[2].trim() };
-    })
-    .filter(Boolean) as { score: string; description: string }[];
-}
-
-function HintToggle({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-  const bullets = parseHintBullets(text);
-  const hasBullets = bullets.length > 0;
-
-  return (
-    <span className="hint-wrap">
-      <button
-        type="button"
-        className="hint-toggle"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Show scoring guide for this question"
-      >
-        {open ? "Hide guide ↑" : "Scoring guide ↓"}
-      </button>
-      {open && (
-        hasBullets ? (
-          <ul className="hint-bullets" role="list">
-            {bullets.map(({ score, description }) => (
-              <li key={score} className="hint-bullet">
-                <span
-                  className="hint-bullet-score"
-                  style={{ color: SCORE_COLORS[score] }}
-                  aria-label={`Score ${score}: ${SCORE_LABELS[score] ?? ""}`}
-                >
-                  {score}
-                </span>
-                <span className="hint-bullet-label" style={{ color: SCORE_COLORS[score] }}>
-                  {SCORE_LABELS[score]}
-                </span>
-                <span className="hint-bullet-text">{description}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <span className="hint-body">{text}</span>
-        )
-      )}
-    </span>
-  );
-}
 
 export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentFormProps) {
   const router = useRouter();
@@ -220,9 +159,9 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
 
           {/* Scale legend strip */}
           <div className="scale-legend" aria-label="Scoring scale reference">
-            {scaleConfig.map(({ value, label, color }) => (
+            {scaleConfig.map(({ value, label }) => (
               <span key={value} className="scale-legend-item">
-                <span className="scale-legend-dot" style={{ background: color }} aria-hidden="true" />
+                <span className="scale-legend-dot" aria-hidden="true" />
                 <span><strong>{value}</strong> {label}</span>
               </span>
             ))}
@@ -276,6 +215,7 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
               {activeCategory.questions.map((question, qi) => {
                 const selected = answers[question.id];
                 const isAnswered = selected !== undefined;
+                const scoreGuides = question.hint ? parseHintBullets(question.hint) : [];
                 return (
                   <fieldset
                     key={question.id}
@@ -290,26 +230,39 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
                       </span>
                     </legend>
 
-                    {question.hint && <HintToggle text={question.hint} />}
-
                     <div className="scale-row" role="radiogroup" aria-label={question.text}>
-                      {scaleConfig.map(({ value, label, color }) => (
-                        <label
-                          key={value}
-                          className={`scale-option ${selected === value ? "scale-option--checked" : ""}`}
-                          style={selected === value ? ({ "--dot-color": color } as React.CSSProperties) : {}}
-                        >
-                          <input
-                            type="radio"
-                            name={question.id}
-                            value={value}
-                            checked={selected === value}
-                            onChange={() => updateAnswer(question.id, value)}
-                            aria-label={`${value} – ${label}`}
-                          />
-                          <span className="scale-num" aria-hidden="true">{value}</span>
-                          <span className="scale-label-text" aria-hidden="true">{label}</span>
-                        </label>
+                      {scaleConfig.map(({ value, label }) => (
+                        (() => {
+                          const optionGuide = scoreGuides.find((guide) => guide.score === String(value));
+                          const optionDescription = optionGuide?.description ?? "";
+                          const optionDescriptionId = `${question.id}-score-${value}-description`;
+
+                          return (
+                            <label
+                              key={value}
+                              className={`scale-option scale-option--survey ${selected === value ? "scale-option--checked" : ""}`}
+                            >
+                              <input
+                                type="radio"
+                                name={question.id}
+                                value={value}
+                                checked={selected === value}
+                                onChange={() => updateAnswer(question.id, value)}
+                                aria-label={`${value} - ${label}${optionDescription ? `: ${optionDescription}` : ""}`}
+                                aria-describedby={optionDescription ? optionDescriptionId : undefined}
+                              />
+                              <span className="scale-option-head" aria-hidden="true">
+                                <span className="scale-value-badge">{value}</span>
+                                <span className="scale-label-text">{SCORE_LABELS[String(value)] ?? label}</span>
+                              </span>
+                              {optionDescription && (
+                                <span id={optionDescriptionId} className="scale-description">
+                                  {optionDescription}
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })()
                       ))}
                     </div>
                   </fieldset>

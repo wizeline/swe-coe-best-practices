@@ -76,6 +76,7 @@ export interface TeamStats {
   averageTotalScore: number;
   maxTotalScore: number;
   categoryAverages: Record<string, number>;
+  categorySuggestions: Record<string, Recommendation[]>;
   submissionsByEmail: Record<string, SubmissionRecord[]>;
 }
 

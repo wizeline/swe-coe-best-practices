@@ -11,23 +11,23 @@ export const assessmentTemplate: AssessmentModel = {
       id: "pillar-1-ideation",
       title: "Pillar 1 – Ideation & Requirements",
       description:
-        "Intent Engineering: how rigorously you capture, structure, and trace requirements before writing code.",
+        "How clearly you define and understand the work before writing a single line of code.",
       weight: 0.2,
       questions: [
         {
           id: "p1-q1",
-          text: "How do you document the requirements?",
-          hint: '1 = I am building based on verbal cues or vague notes without a formal standard. · 2 = I am writing a basic summary of the features in the ticket. · 3 = I am writing a formal Technical Spec with Gherkin-style Acceptance Criteria manually. · 4 = I am using an Agent to normalize raw client inputs into a structured "Super-Spec."',
+          text: "How do you document requirements before starting a task?",
+          hint: "1 = I build based on vague notes or verbal requests. · 2 = I write a basic summary of the feature in the ticket. · 3 = I write a formal spec with clear Acceptance Criteria. · 4 = I use an AI Agent to turn raw client requests into a structured 'Super-Spec'.",
         },
         {
           id: "p1-q2",
-          text: "Do you analyze codebase impact?",
-          hint: "1 = I am starting to code immediately without checking how it affects other modules. · 2 = I am checking only the relevant files manually before I start coding. · 3 = I am creating a manual Technical Impact Map showing all affected dependencies. · 4 = I am using a code-aware Agent to perform a full system risk and debt scan.",
+          text: "How do you check what your code will break (impact analysis)?",
+          hint: "1 = I start coding immediately and fix things as they break. · 2 = I manually check a few relevant files before I start. · 3 = I create a map of all dependencies and services that will be affected. · 4 = I use a code-aware AI agent to scan the whole system for risks.",
         },
         {
           id: "p1-q3",
-          text: "How do you track your performance?",
-          hint: "1 = I am not tracking my time or velocity for individual tasks. · 2 = I am checking my progress against the assigned sprint deadline. · 3 = I am manually tracking my individual Cycle Time and Rework Rate for this task. · 4 = I am using automated platform tools to baseline my DORA metrics in real-time.",
+          text: "How do you track your delivery speed and quality?",
+          hint: "1 = I don't track my time or velocity. · 2 = I just check if I meet the sprint deadline. · 3 = I manually track how long tasks take and how often my code gets sent back. · 4 = I use automated tools to track my DORA metrics in real-time.",
         },
       ],
       recommendations: [
@@ -36,21 +36,21 @@ export const assessmentTemplate: AssessmentModel = {
           maxScoreInclusive: 12,
           title: "Start writing structured ticket descriptions",
           action:
-            "Before coding, add a short 'Why / What / Acceptance Criteria' block to every ticket to move from ad-hoc to disciplined.",
+            "Before coding, add a 'Why / What / Acceptance Criteria' block to your ticket. Example: Add a bulleted list of 3 things that must be true for this ticket to be considered 'Done'.",
         },
         {
           id: "p1-r2",
           maxScoreInclusive: 24,
           title: "Adopt Gherkin-style Acceptance Criteria",
           action:
-            "Write Given/When/Then scenarios for each requirement and create a Technical Impact Map listing all files and services affected.",
+            "Write scenarios for each requirement. Example: Write 'Given a logged-in user, When they click buy, Then the cart clears'. Also, list all files you expect to change before coding.",
         },
         {
           id: "p1-r3",
           maxScoreInclusive: 36,
           title: "Leverage AI for requirements normalization",
           action:
-            "Use a prompt-based agent to turn raw client inputs into a structured Super-Spec and track DORA metrics automatically.",
+            "Use a prompt-based agent to turn raw client inputs into a structured spec. Example: Paste a Slack thread from a PM into an LLM and ask it to generate Jira Acceptance Criteria.",
         },
       ],
     },
@@ -58,23 +58,23 @@ export const assessmentTemplate: AssessmentModel = {
       id: "pillar-2-design",
       title: "Pillar 2 – Design & Architecture",
       description:
-        "Systematic Planning: how deliberately you design solutions, reuse patterns, and assess security before implementation.",
+        "How you plan your technical solutions, reuse existing code, and handle security.",
       weight: 0.2,
       questions: [
         {
           id: "p2-q4",
-          text: "Do you look for reusable components?",
-          hint: "1 = I am writing new code without checking if a solution already exists. · 2 = I am searching the current project for similar code patterns manually. · 3 = I am consulting Architectural Decision Records (ADRs) for global patterns. · 4 = I am querying WIZEBrain to find validated building blocks (WIZECores).",
+          text: "How do you find reusable components or patterns?",
+          hint: "1 = I write new code without checking if we already solved this. · 2 = I manually search the repo to see if someone wrote similar code. · 3 = I check our Architectural Decision Records (ADRs) or shared UI libraries. · 4 = I query our internal AI Knowledge Base for validated building blocks.",
         },
         {
           id: "p2-q5",
-          text: "Is there a technical blueprint?",
-          hint: "1 = I am coding directly from my own intuition without a visual or written plan. · 2 = I am making a quick mental or whiteboard sketch of the logic. · 3 = I am writing a formal Design Doc with C4 or Mermaid diagrams in the repository. · 4 = I am using an Agent to validate that my spec matches the account's patterns.",
+          text: "Do you create a technical plan before coding?",
+          hint: "1 = I just code straight from my head. · 2 = I make a quick whiteboard sketch or mental note. · 3 = I write a Design Doc with diagrams (like C4 or Mermaid) in the repo. · 4 = I use AI to validate that my plan matches the company's architecture standards.",
         },
         {
           id: "p2-q6",
-          text: "Do you evaluate security risks?",
-          hint: '1 = I am assuming the system handles security and am not performing a specific review. · 2 = I am keeping general security principles in mind while designing. · 3 = I am performing a manual "Threat Modeling" session for the data flow. · 4 = I am using an AI security scanner to detect vulnerabilities in the design phase.',
+          text: "When do you evaluate security risks?",
+          hint: "1 = I assume the infrastructure/cloud handles security. · 2 = I keep general security best practices in mind while coding. · 3 = I do a specific 'Threat Modeling' check to see how data flows and where it can be hacked. · 4 = I use an AI security scanner to detect flaws in my design document before coding.",
         },
       ],
       recommendations: [
@@ -83,45 +83,45 @@ export const assessmentTemplate: AssessmentModel = {
           maxScoreInclusive: 12,
           title: "Make design visible before coding",
           action:
-            "Sketch a simple diagram (even a whiteboard photo) and search the repo for existing patterns before writing the first line.",
+            "Sketch a simple diagram and search the repo for existing patterns. Example: Take a photo of a whiteboard drawing and attach it to the PR so reviewers understand your intent.",
         },
         {
           id: "p2-r2",
           maxScoreInclusive: 24,
           title: "Document with ADRs and Threat Models",
           action:
-            "Publish a short Design Doc with a C4 or Mermaid diagram and run a 30-minute Threat Modeling session to identify data-flow risks.",
+            "Publish a short Design Doc. Example: Use Mermaid.js to create a sequence diagram showing how the frontend, API, and database talk to each other, and document one security risk.",
         },
         {
           id: "p2-r3",
           maxScoreInclusive: 36,
           title: "Adopt AI-assisted design validation",
           action:
-            "Query WIZEBrain for reusable WIZECores and use an AI security scanner to catch vulnerabilities during design, not after.",
+            "Query AI for reusable components and vulnerabilities. Example: Feed your proposed database schema into an AI agent and ask it to find SQL injection vulnerabilities or missing indexes.",
         },
       ],
     },
     {
       id: "pillar-3-development",
-      title: "Pillar 3 – Development",
+      title: "Pillar 3 – Development Hygiene",
       description:
-        "Implementation Hygiene: how clean, traceable, and well-documented your code changes are.",
+        "How clean, reviewable, and well-documented your actual code changes are.",
       weight: 0.2,
       questions: [
         {
           id: "p3-q7",
-          text: "Are your Pull Requests (PRs) manageable?",
-          hint: '1 = I am submitting large, multi-feature Pull Requests that are hard to review. · 2 = I am keeping my PR focused on the assigned task. · 3 = I am enforcing a strict <200 LOC limit and single-responsibility "slices." · 4 = I am using an Agent to split complex tasks into atomic, generated sub-commits.',
+          text: "How do you manage the size and scope of your Pull Requests (PRs)?",
+          hint: "1 = I submit large PRs that mix multiple features and refactors together. · 2 = I keep my PR focused on the ticket, regardless of how large it gets. · 3 = I enforce single-responsibility PRs (separating refactors from features) to keep reviewer cognitive load low. · 4 = I use an AI agent to automatically split my work into atomic, easily reviewable sub-commits.",
         },
         {
           id: "p3-q8",
-          text: "Does the code match the intent?",
-          hint: "1 = I am adjusting requirements as I code based on what is easier to implement. · 2 = I am checking that the code works as expected through manual tests. · 3 = I am manually mapping every block of code back to an Acceptance Criterion. · 4 = I am using an automated agent to validate spec-to-code parity before the PR.",
+          text: "How do you ensure your code does exactly what the ticket asked?",
+          hint: "1 = I change requirements on the fly if it's easier to code. · 2 = I manually test the app to see if it works. · 3 = I explicitly link specific functions in my code back to specific Acceptance Criteria. · 4 = I use an automated AI agent to verify my code matches the spec before opening the PR.",
         },
         {
           id: "p3-q9",
-          text: "Is your documentation live?",
-          hint: '1 = I am leaving documentation for later or relying on others to update it. · 2 = I am updating the README file after I finish writing the code. · 3 = I am updating READMEs and ADRs in the same commit as the code (Docs-as-Code). · 4 = I am using a "Docs-as-Code" agent to auto-refresh diagrams and references.',
+          text: "When do you update the documentation?",
+          hint: "1 = I leave it for later or never do it. · 2 = I update the README a few days after my code is merged. · 3 = I update docs in the exact same commit as my code changes (Docs-as-Code). · 4 = I use an AI agent to auto-generate and refresh documentation based on my code.",
         },
       ],
       recommendations: [
@@ -130,21 +130,21 @@ export const assessmentTemplate: AssessmentModel = {
           maxScoreInclusive: 12,
           title: "Keep PRs focused and update docs",
           action:
-            "Scope each PR to a single concern and update the README before merging to build the docs habit.",
+            "Scope each PR to a single concern. Example: If you notice a typo in another file, ignore it or make a separate PR for it. Don't mix it into your current feature PR.",
         },
         {
           id: "p3-r2",
           maxScoreInclusive: 24,
-          title: "Enforce PR size limits and Docs-as-Code",
+          title: "Enforce single-responsibility PRs and Docs-as-Code",
           action:
-            "Set a 200 LOC soft limit per PR, commit ADR updates alongside code changes, and manually trace each code block to an Acceptance Criterion.",
+            "Keep PRs optimized for reviewability. Example: If you need to refactor a messy function to build your new feature, make PR #1 just the refactor, and PR #2 just the new feature.",
         },
         {
           id: "p3-r3",
           maxScoreInclusive: 36,
           title: "Automate spec-to-code traceability",
           action:
-            "Use an agent to split large tasks into atomic commits and to validate spec parity before the PR is opened.",
+            "Use an agent to split large tasks into atomic commits. Example: Use an AI tool that reads your diffs and automatically generates a detailed, accurate PR description summarizing the changes.",
         },
       ],
     },
@@ -152,23 +152,23 @@ export const assessmentTemplate: AssessmentModel = {
       id: "pillar-4-quality",
       title: "Pillar 4 – Quality Engineering",
       description:
-        "Validation & Reliability: how thoroughly you test, audit, and protect against regressions.",
+        "How thoroughly you test your code and protect against future bugs.",
       weight: 0.2,
       questions: [
         {
           id: "p4-q10",
-          text: "Do you find the hidden bugs?",
-          hint: '1 = I am not writing automated tests for this specific task. · 2 = I am writing Unit Tests for the main "Happy Path." · 3 = I am using a Manual Checklist to write tests for Nulls, Bounds, and Errors. · 4 = I am using a QA agent to discover non-obvious edge cases and generate coverage.',
+          text: "How do you test for hidden bugs?",
+          hint: "1 = I don't write automated tests. · 2 = I write Unit Tests just for the 'Happy Path' (when everything works right). · 3 = I use a checklist to test edge cases like Nulls, extreme numbers, and errors. · 4 = I use a QA AI agent to discover weird edge cases I didn't think of.",
         },
         {
           id: "p4-q11",
-          text: "How do you verify the output?",
-          hint: '1 = I am merging code as soon as the build passes without human review. · 2 = I am requesting a standard peer review from a teammate. · 3 = I am performing a "Protocol Audit" (manual line-by-line check) of my logic. · 4 = I am using a "Verifier" agent to audit code against the spec before human review.',
+          text: "How do you verify your logic before merging?",
+          hint: "1 = I merge as soon as the CI pipeline is green. · 2 = I ask a teammate to do a standard code review. · 3 = I do a line-by-line self-audit of my own code before asking for a review. · 4 = I use an AI 'Verifier' to audit my logic against the spec before a human looks at it.",
         },
         {
           id: "p4-q12",
-          text: "Do you handle legacy regressions?",
-          hint: '1 = I am ignoring old broken tests or bypassing them to finish my task. · 2 = I am fixing any old tests that I break during the task. · 3 = I am manually refactoring and cleaning "Test Debt" in the affected modules. · 4 = I am using an agent to automatically repair the legacy test suite in the background.',
+          text: "How do you handle broken legacy tests or technical debt?",
+          hint: "1 = I ignore failing old tests or skip them to get my work done. · 2 = I only fix old tests if my new code broke them. · 3 = I actively dedicate time to clean up and refactor messy tests in the files I touch. · 4 = I use an AI agent to automatically repair and update legacy tests in the background.",
         },
       ],
       recommendations: [
@@ -177,21 +177,21 @@ export const assessmentTemplate: AssessmentModel = {
           maxScoreInclusive: 12,
           title: "Expand beyond happy-path tests",
           action:
-            "After writing happy-path tests, add at least one null, one boundary, and one error-path test case per function.",
+            "Write tests for when things go wrong. Example: If you write a function that divides numbers, write one test for normal numbers, and a second test to see what happens if you divide by zero.",
         },
         {
           id: "p4-r2",
           maxScoreInclusive: 24,
-          title: "Introduce Protocol Audits and test debt cleanup",
+          title: "Introduce self-audits and test debt cleanup",
           action:
-            "Perform a line-by-line logic review before each PR and schedule a recurring slot to refactor test debt in touched modules.",
+            "Review your own code first. Example: Review your own PR on GitHub before tagging a teammate. Also, commit to rewriting one bad legacy test in the file you are currently editing.",
         },
         {
           id: "p4-r3",
           maxScoreInclusive: 36,
           title: "Adopt AI-assisted QA agents",
           action:
-            "Use a QA agent to discover edge cases and generate coverage, and a Verifier agent to audit spec parity before human review.",
+            "Use AI to discover edge cases. Example: Provide your function to an AI and ask, 'Generate 5 unit tests that attempt to break this logic using weird or unexpected inputs.'",
         },
       ],
     },
@@ -199,41 +199,41 @@ export const assessmentTemplate: AssessmentModel = {
       id: "pillar-5-operations",
       title: "Pillar 5 – Operations & Maintenance",
       description:
-        "Observability: how easy it is to debug, hand off, and operate the system you built.",
+        "How easy it is to monitor, debug, and hand off the system you built.",
       weight: 0.2,
       questions: [
         {
           id: "p5-q13",
-          text: "Is it easy to debug?",
-          hint: "1 = I am not adding any specific logs or traces to the code. · 2 = I am adding basic console logs to track errors in the code. · 3 = I am manually defining structured SLOs, Dashboards, and Trace points. · 4 = I am using an agent to ensure the code is ready for AI-assisted anomaly detection.",
+          text: "How easy is it to debug your code in production?",
+          hint: "1 = I don't add specific logs. · 2 = I add basic text logs (e.g., 'User logged in') to track errors. · 3 = I use structured JSON logging and set up Dashboards/Alerts for my feature. · 4 = I format my code and logs specifically so AI can do automated anomaly detection.",
         },
         {
           id: "p5-q14",
-          text: "Can another engineer take over?",
-          hint: "1 = I am finishing tasks without leaving any context for future maintainers. · 2 = I am explaining my changes in the PR description field. · 3 = I am writing a formal Knowledge Transfer (KT) guide and linking it in the repo. · 4 = I am updating the WIZEBrain hub with implementation evidence automatically.",
+          text: "How easily can another engineer take over your work?",
+          hint: "1 = I finish tasks without leaving context for the next person. · 2 = I explain how my code works in the PR description only. · 3 = I write a formal Knowledge Transfer (KT) guide and link it in the repo. · 4 = I use AI to automatically update our central engineering wiki with my implementation details.",
         },
       ],
       recommendations: [
         {
           id: "p5-r1",
           maxScoreInclusive: 12,
-          title: "Replace console logs with structured logging",
+          title: "Replace text logs with structured logging",
           action:
-            "Use a structured logger and document the PR changes clearly so another engineer can pick up the work without asking.",
+            "Use logs that are easy to search. Example: Instead of console.log('failed to fetch user'), use logger.error('user_fetch_failed', { userId: id, endpoint: url }).",
         },
         {
           id: "p5-r2",
           maxScoreInclusive: 24,
-          title: "Define SLOs, Dashboards, and a KT guide",
+          title: "Define Dashboards and a KT guide",
           action:
-            "Add trace points and a dashboard for your feature, and write a formal Knowledge Transfer guide linked from the repo README.",
+            "Make your feature observable. Example: Create a Datadog/Grafana dashboard tracking the success rate of your new API endpoint, and add a 'How to Test' section to the README.",
         },
         {
           id: "p5-r3",
           maxScoreInclusive: 36,
           title: "Make observability AI-ready",
           action:
-            "Instrument code for AI-assisted anomaly detection and automate publishing implementation evidence to the WIZEBrain knowledge hub.",
+            "Automate documentation. Example: Hook up a tool that automatically publishes your successful PRs and their architectural changes into your company's Confluence or Notion workspace.",
         },
       ],
     },

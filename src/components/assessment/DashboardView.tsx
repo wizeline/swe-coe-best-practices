@@ -343,6 +343,11 @@ interface ScoreCardProps {
 function ScoreCard({ result, email }: ScoreCardProps) {
   const answered = result.categories.reduce((acc, cat) => acc + cat.answered, 0);
   const total = result.categories.reduce((acc, cat) => acc + cat.total, 0);
+  const analysisRecommendations = result.analysis?.recommendations ?? [];
+  const hasAnalysisRecommendations = analysisRecommendations.length > 0;
+  const hasFindings =
+    (result.analysis?.keyStrengths?.length ?? 0) > 0 ||
+    (result.analysis?.keyWeaknesses?.length ?? 0) > 0;
 
   return (
     <div className="dashboard-grid">
@@ -393,26 +398,63 @@ function ScoreCard({ result, email }: ScoreCardProps) {
 
       <article className="card results-content-card results-content-card--suggestions">
         <section className="suggestions">
-          <h3>Actions to Improve</h3>
-          {result.categories.flatMap((category) =>
-            category.suggestions.map((suggestion) => (
-              <article key={suggestion.id} className="suggestion-item">
-                <p className="suggestion-category">{category.title}</p>
-                <h4>{suggestion.title}</h4>
-                <p>{suggestion.action}</p>
-                <Link href={getToolingHrefForCategory(category.id)} className="suggestion-link">
-                  Open playbook
-                </Link>
+          <h3>{hasAnalysisRecommendations ? "Report Action Items" : "Actions to Improve"}</h3>
+          {hasAnalysisRecommendations &&
+            analysisRecommendations.map((recommendation, index) => (
+              <article key={`analysis-rec-${index + 1}`} className="suggestion-item">
+                <p className="suggestion-category">{recommendation.pillar}</p>
+                <h4>{recommendation.priority.toUpperCase()} Priority</h4>
+                <p>{recommendation.action}</p>
               </article>
-            )),
-          )}
-          {result.categories.every((c) => c.suggestions.length === 0) && (
+            ))}
+          {!hasAnalysisRecommendations &&
+            result.categories.flatMap((category) =>
+              category.suggestions.map((suggestion) => (
+                <article key={suggestion.id} className="suggestion-item">
+                  <p className="suggestion-category">{category.title}</p>
+                  <h4>{suggestion.title}</h4>
+                  <p>{suggestion.action}</p>
+                  <Link href={getToolingHrefForCategory(category.id)} className="suggestion-link">
+                    Open playbook
+                  </Link>
+                </article>
+              )),
+            )}
+          {!hasAnalysisRecommendations && result.categories.every((c) => c.suggestions.length === 0) && (
             <p className="no-suggestions">
               Great job! Keep maintaining these high standards.
             </p>
           )}
         </section>
       </article>
+
+      {hasFindings && (
+        <article className="card results-content-card results-content-card--findings">
+          <section className="suggestions">
+            <h3>Report Findings</h3>
+            {(result.analysis?.keyStrengths?.length ?? 0) > 0 && (
+              <article className="suggestion-item">
+                <p className="suggestion-category">Strengths</p>
+                <ul className="analysis-list">
+                  {result.analysis?.keyStrengths.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            )}
+            {(result.analysis?.keyWeaknesses?.length ?? 0) > 0 && (
+              <article className="suggestion-item">
+                <p className="suggestion-category">Weaknesses</p>
+                <ul className="analysis-list">
+                  {result.analysis?.keyWeaknesses.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            )}
+          </section>
+        </article>
+      )}
 
     </div>
   );

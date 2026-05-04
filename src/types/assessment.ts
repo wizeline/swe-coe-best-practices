@@ -48,6 +48,16 @@ export interface AssessmentResult {
   completion: number;
   maturityLabel: "Foundational" | "Disciplined" | "Optimized" | "Strategic";
   categories: CategoryResult[];
+  analysis?: {
+    overallImpressions: string;
+    keyStrengths: string[];
+    keyWeaknesses: string[];
+    recommendations: Array<{
+      priority: string;
+      pillar: string;
+      action: string;
+    }>;
+  };
 }
 
 export interface SubmissionRecord {

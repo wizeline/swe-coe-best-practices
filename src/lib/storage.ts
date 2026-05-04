@@ -89,3 +89,17 @@ export async function deleteSubmission(id: string): Promise<void> {
     method: "DELETE",
   });
 }
+
+export async function submitRepositoryAnalysis(analysisData: string): Promise<SubmissionRecord> {
+  let payload: unknown;
+  try {
+    payload = JSON.parse(analysisData);
+  } catch {
+    throw new Error("Invalid JSON format");
+  }
+  
+  return requestJson<SubmissionRecord>("/api/submissions/analysis", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

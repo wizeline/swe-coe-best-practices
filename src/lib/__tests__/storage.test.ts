@@ -11,6 +11,7 @@ import {
   loadAllSubmissions,
   loadOwnedSessions,
   loadTeamSubmissions,
+  submitRepositoryAnalysis,
 } from "@/lib/storage";
 import type { AssessmentResult, AssessmentSessionRecord, SubmissionRecord } from "@/types/assessment";
 
@@ -122,6 +123,53 @@ describe("submission API storage", () => {
       "/api/submissions/sub-77",
       expect.objectContaining({ method: "DELETE" }),
     );
+  });
+
+  it("submits repository analysis with valid JSON", async () => {
+    const analysisPayload = {
+      email: "analyst@example.com",
+      analysis: {
+        overall_impressions: "Good maturity",
+        pillars: {
+          pillar_1_ideation: { title: "Ideation", questions: [], pillar_score: 3 },
+          pillar_2_code: { title: "Code", questions: [], pillar_score: 3 },
+          pillar_3_testing: { title: "Testing", questions: [], pillar_score: 2 },
+          pillar_4_documentation: { title: "Docs", questions: [], pillar_score: 2 },
+          pillar_5_operations: { title: "Operations", questions: [], pillar_score: 2 },
+        },
+        raw_score: 24,
+        maturity_level: "Disciplined" as const,
+        key_strengths: ["Good CI/CD"],
+        key_weaknesses: ["Limited docs"],
+        recommendations: [],
+      },
+    };
+
+    const response: SubmissionRecord = {
+      id: "sub-analysis-1",
+      email: "analyst@example.com",
+      totalScore: 24,
+      maxScore: 48,
+      maturityLabel: "Disciplined",
+      submittedAt: new Date().toISOString(),
+    };
+
+    mockJsonResponse(response, true, 201);
+
+    const result = await submitRepositoryAnalysis(JSON.stringify(analysisPayload));
+    expect(result).toEqual(response);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/submissions/analysis",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(analysisPayload),
+      }),
+    );
+  });
+
+  it("rejects invalid JSON for repository analysis", async () => {
+    await expect(submitRepositoryAnalysis("{ invalid json }")).rejects.toThrow("Invalid JSON format");
   });
 });
 

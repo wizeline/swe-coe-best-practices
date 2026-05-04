@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AssessmentForm } from "@/components/assessment/AssessmentForm";
+import { RepositoryAnalysisSubmission } from "@/components/assessment/RepositoryAnalysisSubmission";
 
 interface AssessmentPageProps {
   searchParams: Promise<{ session?: string }>;
@@ -22,6 +23,13 @@ export default async function AssessmentPage({ searchParams }: AssessmentPagePro
         <p>Fill out this form to evaluate your engineering team&apos;s Best Practices Framework maturity.</p>
       </div>
       <AssessmentForm userEmail={userEmail} initialSessionCode={params.session?.toUpperCase() ?? null} />
+      
+      <div className="divider-section">
+        <h2 className="divider-title">Or Submit a Repository Analysis</h2>
+        <p className="divider-description">Use our AI analysis prompt to automatically score your repository based on observable signals.</p>
+      </div>
+      
+      <RepositoryAnalysisSubmission userEmail={userEmail} />
     </section>
   );
 }

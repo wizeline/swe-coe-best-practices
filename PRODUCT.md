@@ -2,6 +2,8 @@
 
 Product definition and scoring model for the assessment experience.
 
+> For the complete framework reference (pillars, questions, rubrics, recommendations, and the Engineering Excellence Cycle) in a stakeholder-readable format, see [FRAMEWORK.md](FRAMEWORK.md).
+
 ## Product Overview
 
 Internal tool for self-assessing engineering practices across five pillars at a personal level. Developers score 16 of their own habits on a 1-4 scale and receive a score level, weighted pillar scores, and prioritized recommendations.
@@ -21,14 +23,16 @@ Five pillars, each with 2-3 questions scored 1 (Foundational) to 4 (Strategic):
 ## Scoring Scale
 
 Per-question scale: 1-4 (Foundational to Strategic)  
-Raw score range: 0-64 (16 questions x 4 levels)
+Raw score range: dynamic (`0..questionCount * 4`)
 
-| Raw Score | Label        | Meaning                                                              |
-| --------- | ------------ | -------------------------------------------------------------------- |
-| 0-12      | Foundational | Rare or ad-hoc personal practice                                     |
-| 13-24     | Disciplined  | Informal but consistent individual effort                            |
-| 25-36     | Optimized    | Structured personal habits, applied consistently                     |
-| 37-64     | Strategic    | Deliberate, repeatable approach with continuous personal improvement |
+| Band rule (by max score) | Label | Definition |
+| --- | --- | --- |
+| Bottom range up to Disciplined threshold | Foundational | Base adherence. Follows standard Definition of Done protocols and coding conventions. Execution is reliable but predominantly ad-hoc, with minimal structural intent modeling or automated accelerators. |
+| Mid range below top 20% | Disciplined | Elite manual rigor. Exceptional autonomous delivery through extreme manual discipline: consistent Spec-Driven Development, Docs-as-Code, modular architectural isolation, zero syntax or deployment oversight. |
+| Top 20% excluding top 10% | Optimized | Efficiency multiplier. Successfully leverages AI, advanced scripting, and automated workflows to accelerate the Disciplined-tier habits. Operates as an "Intelligence Curator" — uses automation to offload toil while retaining full human accountability over quality, edge cases, and design parity. |
+| Top 10% only | Strategic | Systemic influence. Operates fully "over-the-loop," orchestrating complex cross-system architectures and agentic pipelines. Defines organization-wide engineering patterns, actively mentors peers, and manages macro-level systemic risks. |
+
+The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScore)` in `src/lib/scoring.ts`, so adding/removing questions automatically rescales all bands.
 
 ## Routes
 
@@ -42,6 +46,8 @@ Raw score range: 0-64 (16 questions x 4 levels)
 | /admin      | Admin-only cross-team comparison plus database activity stats (auth required) |
 
 Team session reports include one prioritized action item per pillar, selected based on the team's average results and relevance to their current score level. The action item shown is the next achievable improvement goal.
+Dashboard score cards now show current level, next target level, and points remaining to reach it (individual and team views).
+Category/pillar breakdown rows show score as `current / 4.0` and the gap to optimal to make distance-to-target explicit.
 Dashboard session cards show each session's creation date, and the create-session field guides naming with the `Team - Quarter` pattern.
 Draft answers are stored locally in the browser (localStorage) until the assessment is submitted.
 The admin page shows database-level counts for assessments, sessions, saved results, unique participants, and session owners.

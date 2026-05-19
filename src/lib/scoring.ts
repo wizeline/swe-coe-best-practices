@@ -10,25 +10,17 @@ import {
 import { MAX_RECOMMENDATIONS_PER_PILLAR } from "@/lib/config";
 
 /**
- * SCORE_BANDS is the single source of truth for all scoring thresholds.
+ * Dynamic score-percentile boundaries.
  *
- * Each band defines the inclusive upper bound of the raw score range.
- * Add or remove questions in assessmentTemplate.ts and update these
- * thresholds here — no other file needs to change.
- *
- * Current setup: 16 questions × 4 max = 64 raw points.
- *   Foundational : 0–12
- *   Disciplined  : 13–24
- *   Optimized    : 25–36
- *   Strategic    : 37–64
+ * Strategic is always reserved for the top 10% of scores and Optimized
+ * for the next 10% (top 20% excluding Strategic). The Disciplined minimum
+ * can be adjusted and defaults to 50% of max score.
  */
-export const SCORE_BANDS: Record<RecommendationBand, number> = {
-  foundational: 12,
-  disciplined: 24,
-  optimized: 36,
-  // strategic uses Infinity so users at the top band always receive these recommendations.
-  strategic: Infinity,
-};
+export const SCORE_PERCENTILES = {
+  disciplinedMin: 0.5,
+  optimizedMin: 0.8,
+  strategicMin: 0.9,
+} as const;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -39,27 +31,113 @@ const average = (values: number[]) => {
   return values.reduce((acc, value) => acc + value, 0) / values.length;
 };
 
-export const getScoreLevel = (score: number): AssessmentResult["scoreLevel"] => {
-  if (score <= SCORE_BANDS.foundational) {
+export const resolveScoreBands = (maxScore: number): Record<RecommendationBand, number> => {
+  const safeMaxScore = Math.max(0, Math.floor(maxScore));
+  if (safeMaxScore === 0) {
+    return {
+      foundational: 0,
+      disciplined: 0,
+      optimized: 0,
+      strategic: Infinity,
+    };
+  }
+
+  const disciplinedMin = Math.min(
+    safeMaxScore,
+    Math.max(1, Math.ceil(safeMaxScore * SCORE_PERCENTILES.disciplinedMin))
+  );
+  const optimizedMin = Math.min(
+    safeMaxScore,
+    Math.max(disciplinedMin, Math.ceil(safeMaxScore * SCORE_PERCENTILES.optimizedMin))
+  );
+  const strategicMin = Math.min(
+    safeMaxScore,
+    Math.max(optimizedMin, Math.ceil(safeMaxScore * SCORE_PERCENTILES.strategicMin))
+  );
+
+  return {
+    foundational: Math.max(0, disciplinedMin - 1),
+    disciplined: Math.max(0, optimizedMin - 1),
+    optimized: Math.max(0, strategicMin - 1),
+    // strategic uses Infinity so top-band recommendations are always eligible.
+    strategic: Infinity,
+  };
+};
+
+const SCORE_LEVELS: AssessmentResult["scoreLevel"][] = [
+  "Foundational",
+  "Disciplined",
+  "Optimized",
+  "Strategic",
+];
+
+export const getScoreLevel = (
+  score: number,
+  maxScore: number
+): AssessmentResult["scoreLevel"] => {
+  const bands = resolveScoreBands(maxScore);
+
+  if (score <= bands.foundational) {
     return "Foundational";
   }
-  if (score <= SCORE_BANDS.disciplined) {
+  if (score <= bands.disciplined) {
     return "Disciplined";
   }
-  if (score <= SCORE_BANDS.optimized) {
+  if (score <= bands.optimized) {
     return "Optimized";
   }
   return "Strategic";
 };
 
+export interface ScoreLevelProgress {
+  currentLevel: AssessmentResult["scoreLevel"];
+  nextLevel: AssessmentResult["scoreLevel"] | null;
+  nextLevelMinScore: number | null;
+  pointsToNextLevel: number;
+}
+
+export const getScoreLevelProgress = (score: number, maxScore: number): ScoreLevelProgress => {
+  const currentLevel = getScoreLevel(score, maxScore);
+  const currentIndex = SCORE_LEVELS.indexOf(currentLevel);
+  const nextLevel = currentIndex >= SCORE_LEVELS.length - 1 ? null : SCORE_LEVELS[currentIndex + 1];
+
+  if (!nextLevel) {
+    return {
+      currentLevel,
+      nextLevel: null,
+      nextLevelMinScore: null,
+      pointsToNextLevel: 0,
+    };
+  }
+
+  const bands = resolveScoreBands(maxScore);
+  const nextLevelMinByLevel: Record<AssessmentResult["scoreLevel"], number> = {
+    Foundational: 0,
+    Disciplined: bands.foundational + 1,
+    Optimized: bands.disciplined + 1,
+    Strategic: bands.optimized + 1,
+  };
+
+  const nextLevelMinScore = nextLevelMinByLevel[nextLevel];
+  const pointsToNextLevel = Math.max(0, Number((nextLevelMinScore - score).toFixed(2)));
+
+  return {
+    currentLevel,
+    nextLevel,
+    nextLevelMinScore,
+    pointsToNextLevel,
+  };
+};
+
 const getCategorySuggestions = (
   score: number,
-  recommendations: Recommendation[]
+  recommendations: Recommendation[],
+  bands: Record<RecommendationBand, number>
 ): Recommendation[] => {
   // Resolve band → numeric threshold at runtime so the template stays symbolic.
   const resolved = recommendations.map((item) => ({
     ...item,
-    maxScoreInclusive: item.band ? SCORE_BANDS[item.band] : (item.maxScoreInclusive ?? 0),
+    maxScoreInclusive: item.band ? bands[item.band] : (item.maxScoreInclusive ?? 0),
   }));
 
   // Find the most relevant action items (closest maxScoreInclusive >= score).
@@ -75,6 +153,10 @@ export const calculateAssessment = (
   model: AssessmentModel,
   answers: AnswerMap
 ): AssessmentResult => {
+  const totalQuestions = model.categories.reduce((acc, current) => acc + current.questions.length, 0);
+  const maxScore = totalQuestions * 4;
+  const scoreBands = resolveScoreBands(maxScore);
+
   // Compute totalScore first so suggestion selection uses the correct score band.
   const totalScore = model.categories.reduce((acc, category) => {
     const categoryTotal = category.questions.reduce((categoryAcc, question) => {
@@ -100,16 +182,16 @@ export const calculateAssessment = (
       suggestions: getCategorySuggestions(
         totalScore,
         [...category.recommendations].sort((a, b) => {
-          const aMax = a.band ? SCORE_BANDS[a.band] : (a.maxScoreInclusive ?? 0);
-          const bMax = b.band ? SCORE_BANDS[b.band] : (b.maxScoreInclusive ?? 0);
+          const aMax = a.band ? scoreBands[a.band] : (a.maxScoreInclusive ?? 0);
+          const bMax = b.band ? scoreBands[b.band] : (b.maxScoreInclusive ?? 0);
           return aMax - bMax;
-        })
+        }),
+        scoreBands
       ),
     };
   });
 
   const totalAnswered = categoryResults.reduce((acc, current) => acc + current.answered, 0);
-  const totalQuestions = categoryResults.reduce((acc, current) => acc + current.total, 0);
 
   const weightedScoreSum = categoryResults.reduce(
     (acc, current) => acc + current.score * current.weight,
@@ -119,14 +201,13 @@ export const calculateAssessment = (
 
   const overall = weightTotal === 0 ? 0 : weightedScoreSum / weightTotal;
   const completion = totalQuestions === 0 ? 0 : (totalAnswered / totalQuestions) * 100;
-  const maxScore = totalQuestions * 4;
 
   return {
     overallScore: Number(clamp(overall, 0, 4).toFixed(2)),
     totalScore,
     maxScore,
     completion: Number(clamp(completion, 0, 100).toFixed(0)),
-    scoreLevel: getScoreLevel(totalScore),
+    scoreLevel: getScoreLevel(totalScore, maxScore),
     categories: categoryResults,
   };
 };

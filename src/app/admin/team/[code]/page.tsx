@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { buildAdminReportHrefWithPage, buildTeamDetail, isAdminEmail } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { getScoreLevel } from "@/lib/scoring";
 import {
   AdminSessionFilters,
   AdminSessionSort,
@@ -45,18 +46,30 @@ function toSubmissionRecord(data: {
     name: string;
   } | null;
 }): SubmissionRecord {
+  const parsedResult = data.result as unknown as Partial<AssessmentResult>;
+  const totalScore = data.totalScore ?? parsedResult.totalScore ?? 0;
+  const maxScore = data.maxScore ?? parsedResult.maxScore ?? 0;
+  const completion = data.completion ?? parsedResult.completion ?? 0;
+  const scoreLevel = getScoreLevel(totalScore, maxScore);
+
   return {
     id: data.id,
     email: data.email,
     sessionId: data.sessionId,
     sessionCode: data.session?.code ?? null,
     sessionName: data.session?.name ?? null,
-    totalScore: data.totalScore ?? undefined,
-    maxScore: data.maxScore ?? undefined,
-    completion: data.completion ?? undefined,
-    scoreLevel: (data.scoreLevel as SubmissionRecord["scoreLevel"]) ?? undefined,
+    totalScore,
+    maxScore,
+    completion,
+    scoreLevel,
     answers: (data.answers ?? {}) as unknown as AnswerMap,
-    result: data.result as unknown as AssessmentResult,
+    result: {
+      ...(parsedResult as AssessmentResult),
+      totalScore,
+      maxScore,
+      completion,
+      scoreLevel,
+    },
     submittedAt: data.submittedAt.toISOString(),
   };
 }

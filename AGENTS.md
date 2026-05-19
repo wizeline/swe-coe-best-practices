@@ -40,8 +40,9 @@ src/
 
 - `ScoreValue = 1 | 2 | 3 | 4`: never use raw numbers outside this union
 - **Per-question:** 1 = Foundational, 2 = Disciplined, 3 = Optimized, 4 = Strategic
-- **Raw score range:** 0–64 (16 questions × 4 levels)
-- **Score thresholds:** `<13` Foundational · `13–24` Disciplined · `25–36` Optimized · `≥37` Strategic
+- **Raw score range:** dynamic (`0..questionCount * 4`)
+- **Score thresholds:** computed from max score by `resolveScoreBands(maxScore)` in `src/lib/scoring.ts`
+- **Top-band rule:** Strategic is always top 10% and Optimized is always the next 10% (top 20% excluding Strategic)
 - `calculateAssessment(model, answers)` returns an `AssessmentResult`, the single source of truth for all scores
 - **Per-pillar recommendations:** Each pillar shows action items (default: 1 per pillar), the most relevant next-level recommendations based on current score. Configure via `NEXT_PUBLIC_MAX_RECOMMENDATIONS` environment variable in `src/lib/config.ts`.
 
@@ -77,7 +78,7 @@ When a user asks to develop a new feature, agents must deliver all of the follow
 
 1. Implement the feature code using existing architecture and conventions.
 2. Add or update unit tests that cover the new behavior and critical edge cases.
-3. Update documentation to reflect the change (at minimum, relevant sections in `PRODUCT.md` for product changes or `TECHNICAL.md` for engineering changes; update `AGENTS.md` too if repository rules or workflows changed).
+3. Update documentation to reflect the change (at minimum, relevant sections in `PRODUCT.md` for product changes or `TECHNICAL.md` for engineering changes; update `AGENTS.md` too if repository rules or workflows changed). If questions, scoring rubrics, or recommendations change in `src/data/assessmentTemplate.ts`, also update `FRAMEWORK.md` to keep the human-readable reference in sync.
 
 Before finishing feature work, run validation gates:
 
@@ -103,7 +104,9 @@ If any required item cannot be completed (for example, missing testability in le
 3. Add at least one `Recommendation` per score band (`band: "foundational" | "disciplined" | "optimized"`)
 4. Hints must follow the format: `"1 = foundational text · 2 = disciplined text · 3 = optimized text · 4 = strategic text"` - parsed into colored bullets by `HintToggle`
 5. Keep `weight` values summing to 1.0 across all categories
-6. Run `npm test && npm run build` to confirm nothing regressed
+6. Update `FRAMEWORK.md` to reflect the new/changed questions, rubrics, or recommendations
+   - Preferred: run `npm run sync:framework` (auto-generates the framework assessment section from `src/data/assessmentTemplate.ts`)
+7. Run `npm test && npm run build` to confirm nothing regressed
 
 ## Repository Analysis Prompt
 
@@ -137,7 +140,7 @@ The project includes an automated repository analysis prompt (`prompts/repo-anal
 - **Don't instantiate `PrismaClient` in multiple files**: use `src/lib/prisma.ts`
 - **Don't call Prisma from client components**: use `/api/*` route handlers
 - **Don't use `0-3` scale**: the scale is `1-4`; `ScoreValue` enforces this
-- **Don't use normalized scores**: use raw 0-64 scale for thresholds and score levels
-- **Score thresholds live in `SCORE_BANDS`** in `src/lib/scoring.ts` — the single source of truth. Update only there when questions are added or removed.
+- **Don't use normalized scores**: use raw totals and derive thresholds from max score
+- **Score thresholds are resolved by `resolveScoreBands(maxScore)`** in `src/lib/scoring.ts` — the single source of truth.
 - **`AssessmentApp.tsx` is a legacy entry point**: the active form is `AssessmentForm.tsx`
 - **`vitest.config.ts`** sets the `@` path alias to `src/` - use `@/lib/...` in imports

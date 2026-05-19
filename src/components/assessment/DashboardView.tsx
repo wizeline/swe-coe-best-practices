@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { formatSessionCreatedAt } from "@/lib/sessionDisplay";
 import { getPlaybookHrefForCategory } from "@/lib/playbookLinks";
+import { getScoreLevel, getScoreLevelProgress } from "@/lib/scoring";
 import {
   buildTeamStats,
   createAssessmentSession,
@@ -370,6 +371,15 @@ interface ScoreCardProps {
 function ScoreCard({ result, email }: ScoreCardProps) {
   const answered = result.categories.reduce((acc, cat) => acc + cat.answered, 0);
   const total = result.categories.reduce((acc, cat) => acc + cat.total, 0);
+  const scoreProgress = getScoreLevelProgress(result.totalScore, result.maxScore);
+  const scoreLevels: AssessmentResult["scoreLevel"][] = [
+    "Foundational",
+    "Disciplined",
+    "Optimized",
+    "Strategic",
+  ];
+  const currentLevelIndex = scoreLevels.indexOf(scoreProgress.currentLevel);
+  const levelProgressWidth = `${((currentLevelIndex + 1) / scoreLevels.length) * 100}%`;
 
   return (
     <div className="dashboard-grid">
@@ -386,12 +396,29 @@ function ScoreCard({ result, email }: ScoreCardProps) {
           <small>/ {result.maxScore}</small>
         </div>
 
-        <p className="score-level">{result.scoreLevel}</p>
+        <p className="score-level">Current level: {scoreProgress.currentLevel}</p>
+        <p className="score-next-level">
+          {scoreProgress.nextLevel
+            ? `Next level: ${scoreProgress.nextLevel}`
+            : "Next level: You are already at the top level"}
+        </p>
 
-        <div className="progress-wrap" aria-label="completion">
-          <div className="progress-bar" style={{ width: `${result.completion}%` }} />
+        <div className="progress-wrap" aria-label="score level progress">
+          <div className="progress-bar" style={{ width: levelProgressWidth }} />
         </div>
-        <p className="progress-label">Completion {result.completion}%</p>
+
+        <div className="level-scale" aria-hidden="true">
+          {scoreLevels.map((level, index) => (
+            <span
+              key={level}
+              className={`level-scale-label ${index <= currentLevelIndex ? "level-scale-label--active" : ""}`}
+            >
+              {level}
+            </span>
+          ))}
+        </div>
+
+        <p className="progress-label">Level scale</p>
         <p className="email-badge">Submitted by: {email}</p>
       </article>
 
@@ -399,12 +426,20 @@ function ScoreCard({ result, email }: ScoreCardProps) {
         <section className="dashboard-side-section">
           <div className="score-breakdown">
             <h3>Category Breakdown</h3>
-            {result.categories.map((category) => (
-              <div key={category.id} className="breakdown-row">
-                <span>{category.title}</span>
-                <strong>{category.score.toFixed(1)}</strong>
-              </div>
-            ))}
+            {result.categories.map((category) => {
+              const pillarMax = 4;
+
+              return (
+                <div key={category.id} className="breakdown-row">
+                  <span>{category.title}</span>
+                  <div className="breakdown-metric">
+                    <strong>
+                      {category.score.toFixed(1)} / {pillarMax.toFixed(1)}
+                    </strong>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -448,6 +483,16 @@ interface TeamViewProps {
 }
 
 function TeamView({ stats, selectedSession }: TeamViewProps) {
+  const teamScoreProgress = getScoreLevelProgress(stats.averageTotalScore, stats.maxTotalScore);
+  const scoreLevels: AssessmentResult["scoreLevel"][] = [
+    "Foundational",
+    "Disciplined",
+    "Optimized",
+    "Strategic",
+  ];
+  const currentTeamLevelIndex = scoreLevels.indexOf(teamScoreProgress.currentLevel);
+  const teamLevelProgressWidth = `${((currentTeamLevelIndex + 1) / scoreLevels.length) * 100}%`;
+
   return (
     <div>
       <div className="team-session-banner card form-card">
@@ -484,12 +529,37 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
                 </span>
               </div>
               <div className="stat-item">
+                <span className="stat-label">Team Level</span>
+                <span className="stat-value stat-value--compact">{teamScoreProgress.currentLevel}</span>
+                <span className="stat-note">
+                  {teamScoreProgress.nextLevel
+                    ? `Next: ${teamScoreProgress.nextLevel}`
+                    : "Top level reached"}
+                </span>
+              </div>
+              <div className="stat-item">
                 <span className="stat-label">Participants</span>
                 <span className="stat-value">{stats.uniqueParticipants}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Total Responses</span>
                 <span className="stat-value">{stats.totalSubmissions}</span>
+              </div>
+            </div>
+
+            <div className="team-level-progress" aria-label="team score level progress">
+              <div className="progress-wrap">
+                <div className="progress-bar" style={{ width: teamLevelProgressWidth }} />
+              </div>
+              <div className="level-scale" aria-hidden="true">
+                {scoreLevels.map((level, index) => (
+                  <span
+                    key={level}
+                    className={`level-scale-label ${index <= currentTeamLevelIndex ? "level-scale-label--active" : ""}`}
+                  >
+                    {level}
+                  </span>
+                ))}
               </div>
             </div>
           </article>
@@ -499,10 +569,16 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
               <h3>Average by Category</h3>
               {assessmentTemplate.categories.map((category) => {
                 const avgScore = stats.categoryAverages[category.id] ?? 0;
+                const pillarMax = 4;
+
                 return (
                   <div key={category.id} className="breakdown-row">
                     <span>{category.title}</span>
-                    <strong>{avgScore.toFixed(1)}</strong>
+                    <div className="breakdown-metric">
+                      <strong>
+                        {avgScore.toFixed(1)} / {pillarMax.toFixed(1)}
+                      </strong>
+                    </div>
                   </div>
                 );
               })}
@@ -549,17 +625,20 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
               <tbody>
                 {Object.entries(stats.submissionsByEmail).map(([emailAddr, submissions]) => {
                   const latest = submissions[submissions.length - 1];
+                  const latestTotalScore = latest.totalScore ?? latest.result.totalScore;
+                  const latestMaxScore = latest.maxScore ?? latest.result.maxScore;
+                  const statusLevel = getScoreLevel(latestTotalScore, latestMaxScore);
                   return (
                     <tr key={emailAddr}>
                       <td>{emailAddr}</td>
                       <td className="score-cell">
                         <strong>
-                          {latest.result.totalScore}/{latest.result.maxScore}
+                          {latestTotalScore}/{latestMaxScore}
                         </strong>
                       </td>
                       <td>{latest.result.completion}%</td>
                       <td>
-                        <span className="status-badge">{latest.result.scoreLevel}</span>
+                        <span className="status-badge">{statusLevel}</span>
                       </td>
                       <td className="date-cell">
                         {new Date(latest.submittedAt).toLocaleDateString()}

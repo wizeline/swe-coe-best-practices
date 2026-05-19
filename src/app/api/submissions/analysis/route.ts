@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { MAX_RECOMMENDATIONS_PER_PILLAR } from "@/lib/config";
-import { SCORE_BANDS } from "@/lib/scoring";
+import { getScoreLevel, resolveScoreBands } from "@/lib/scoring";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { prisma } from "@/lib/prisma";
 
@@ -40,17 +40,18 @@ function getTemplateSuggestions(categoryId: string, pillarScore: number) {
     return [];
   }
 
-  // Convert 1-4 pillar score into 12-48 band to match recommendation thresholds.
-  const scoreBand = Math.round(Math.max(1, Math.min(4, pillarScore)) * 12);
+  // Convert 1-4 pillar score to the assessment raw-score scale.
+  const scoreBand = Math.round((Math.max(1, Math.min(4, pillarScore)) / 4) * TEMPLATE_MAX_SCORE);
+  const scoreBands = resolveScoreBands(TEMPLATE_MAX_SCORE);
 
   return [...category.recommendations]
     .sort((a, b) => {
-      const aMax = a.band ? SCORE_BANDS[a.band] : (a.maxScoreInclusive ?? 0);
-      const bMax = b.band ? SCORE_BANDS[b.band] : (b.maxScoreInclusive ?? 0);
+      const aMax = a.band ? scoreBands[a.band] : (a.maxScoreInclusive ?? 0);
+      const bMax = b.band ? scoreBands[b.band] : (b.maxScoreInclusive ?? 0);
       return aMax - bMax;
     })
     .filter((item) => {
-      const max = item.band ? SCORE_BANDS[item.band] : (item.maxScoreInclusive ?? 0);
+      const max = item.band ? scoreBands[item.band] : (item.maxScoreInclusive ?? 0);
       return scoreBand <= max;
     })
     .slice(0, MAX_RECOMMENDATIONS_PER_PILLAR);
@@ -156,6 +157,7 @@ export async function POST(request: NextRequest) {
     const weightedSum = categories.reduce((acc, cat) => acc + cat.score * cat.weight, 0);
     const weightTotal = categories.reduce((acc, cat) => acc + cat.weight, 0);
     const overallScore = Number((weightTotal === 0 ? 0 : weightedSum / weightTotal).toFixed(2));
+    const scoreLevel = getScoreLevel(body.analysis.raw_score, TEMPLATE_MAX_SCORE);
 
     const created = await prisma.submission.create({
       data: {
@@ -164,14 +166,13 @@ export async function POST(request: NextRequest) {
         totalScore: body.analysis.raw_score,
         maxScore: TEMPLATE_MAX_SCORE,
         completion,
-        scoreLevel: body.analysis.score_level,
+        scoreLevel: null,
         answers: {} as unknown as Prisma.InputJsonValue,
         result: {
           overallScore,
           totalScore: body.analysis.raw_score,
           maxScore: TEMPLATE_MAX_SCORE,
           completion,
-          scoreLevel: body.analysis.score_level,
           categories,
         } as unknown as Prisma.InputJsonValue,
       },
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
         email: created.email,
         totalScore: created.totalScore,
         maxScore: created.maxScore,
-        scoreLevel: created.scoreLevel,
+        scoreLevel,
         submittedAt: created.submittedAt.toISOString(),
       },
       { status: 201 }

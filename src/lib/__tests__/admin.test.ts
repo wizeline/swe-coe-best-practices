@@ -9,21 +9,13 @@ import {
   isAdminEmail,
   paginateItems,
 } from "@/lib/admin";
+import { getScoreLevel } from "@/lib/scoring";
 import type { AssessmentResult, DatabaseStats, SubmissionRecord } from "@/types/assessment";
 
 const originalAdminEmails = process.env.ADMIN_EMAILS;
 
 function getLabel(totalScore: number): AssessmentResult["scoreLevel"] {
-  if (totalScore < 13) {
-    return "Foundational";
-  }
-  if (totalScore < 25) {
-    return "Disciplined";
-  }
-  if (totalScore < 37) {
-    return "Optimized";
-  }
-  return "Strategic";
+  return getScoreLevel(totalScore, 48);
 }
 
 function makeResult(totalScore: number, completion = 100): AssessmentResult {
@@ -118,7 +110,7 @@ describe("buildCrossTeamComparison", () => {
         name: "Beta",
         ownerEmail: "owner-b@example.com",
         createdAt: "2026-04-24T11:00:00.000Z",
-        submissions: [makeSubmission("sub-3", "dev-c@example.com", 40, "2026-04-24T11:30:00.000Z")],
+        submissions: [makeSubmission("sub-3", "dev-c@example.com", 46, "2026-04-24T11:30:00.000Z")],
       },
     ]);
 
@@ -127,7 +119,7 @@ describe("buildCrossTeamComparison", () => {
     expect(comparison.sessions[0]).toEqual(
       expect.objectContaining({
         id: "session-2",
-        averageTotalScore: 40,
+        averageTotalScore: 46,
         totalSubmissions: 1,
         uniqueParticipants: 1,
         scoreLevel: "Strategic",
@@ -140,7 +132,7 @@ describe("buildCrossTeamComparison", () => {
         averageTotalScore: 20,
         totalSubmissions: 2,
         uniqueParticipants: 2,
-        scoreLevel: "Disciplined",
+        scoreLevel: "Foundational",
         latestSubmissionAt: "2026-04-24T10:45:00.000Z",
       })
     );
@@ -209,7 +201,7 @@ describe("applySessionFilters", () => {
       averageTotalScore: 40,
       averageCompletion: 100,
       maxScore: 48,
-      scoreLevel: "Strategic" as const,
+      scoreLevel: "Optimized" as const,
       categoryAverages: {},
     },
   ];

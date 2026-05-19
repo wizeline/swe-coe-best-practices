@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getScoreLevel } from "@/lib/scoring";
 import { AnswerMap, AssessmentResult, SubmissionRecord } from "@/types/assessment";
 
 function toSubmissionRecord(data: {
@@ -20,18 +21,30 @@ function toSubmissionRecord(data: {
     name: string;
   } | null;
 }): SubmissionRecord {
+  const parsedResult = data.result as unknown as Partial<AssessmentResult>;
+  const totalScore = data.totalScore ?? parsedResult.totalScore ?? 0;
+  const maxScore = data.maxScore ?? parsedResult.maxScore ?? 0;
+  const completion = data.completion ?? parsedResult.completion ?? 0;
+  const computedScoreLevel = getScoreLevel(totalScore, maxScore);
+
   return {
     id: data.id,
     email: data.email,
     sessionId: data.sessionId,
     sessionCode: data.session?.code ?? null,
     sessionName: data.session?.name ?? null,
-    totalScore: data.totalScore ?? undefined,
-    maxScore: data.maxScore ?? undefined,
-    completion: data.completion ?? undefined,
-    scoreLevel: (data.scoreLevel as SubmissionRecord["scoreLevel"]) ?? undefined,
+    totalScore,
+    maxScore,
+    completion,
+    scoreLevel: computedScoreLevel,
     answers: data.answers as unknown as AnswerMap,
-    result: data.result as unknown as AssessmentResult,
+    result: {
+      ...(parsedResult as AssessmentResult),
+      totalScore,
+      maxScore,
+      completion,
+      scoreLevel: computedScoreLevel,
+    },
     submittedAt: data.submittedAt.toISOString(),
   };
 }
@@ -134,9 +147,12 @@ export async function POST(request: NextRequest) {
       totalScore: body.result.totalScore,
       maxScore: body.result.maxScore,
       completion: body.result.completion,
-      scoreLevel: body.result.scoreLevel,
+      scoreLevel: null,
       answers: body.answers as unknown as Prisma.InputJsonValue,
-      result: body.result as unknown as Prisma.InputJsonValue,
+      result: {
+        ...body.result,
+        scoreLevel: undefined,
+      } as unknown as Prisma.InputJsonValue,
     },
     include: { session: { select: { code: true, name: true } } },
   });

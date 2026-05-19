@@ -75,7 +75,7 @@ export function buildSessionComparisonRecord(
     averageTotalScore: stats.averageTotalScore,
     averageCompletion: averageCompletion(input.submissions),
     maxScore: stats.maxTotalScore,
-    scoreLevel: getScoreLevel(Math.round(stats.averageTotalScore)),
+    scoreLevel: getScoreLevel(Math.round(stats.averageTotalScore), stats.maxTotalScore),
     categoryAverages: stats.categoryAverages,
   };
 }
@@ -223,7 +223,7 @@ export function buildTeamDetail(input: TeamDetailInput): TeamDetailRecord {
     const totalScore = submission.totalScore ?? submission.result.totalScore;
     const maxScore = submission.maxScore ?? submission.result.maxScore;
     const completion = submission.completion ?? submission.result.completion;
-    const scoreLevel = submission.scoreLevel ?? submission.result.scoreLevel;
+    const scoreLevel = getScoreLevel(totalScore, maxScore);
     runningTotal += totalScore;
     return {
       id: submission.id,

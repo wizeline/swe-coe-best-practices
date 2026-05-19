@@ -4,7 +4,7 @@ export type AnswerMap = Record<string, ScoreValue | undefined>;
 
 /**
  * Symbolic name for a score band used in recommendations.
- * Maps to a numeric maxScoreInclusive threshold via SCORE_BANDS in scoring.ts.
+ * Maps to a numeric maxScoreInclusive threshold via resolveScoreBands() in scoring.ts.
  * "strategic" maps to Infinity — always shown to users who have reached the top band.
  */
 export type RecommendationBand = "foundational" | "disciplined" | "optimized" | "strategic";
@@ -13,7 +13,7 @@ export interface Recommendation {
   id: string;
   /**
    * Preferred: use `band` to stay independent of raw score thresholds.
-   * The runtime resolves this to maxScoreInclusive via SCORE_BANDS.
+    * The runtime resolves this to maxScoreInclusive via resolveScoreBands().
    */
   band?: RecommendationBand;
   /** Legacy / explicit override. Ignored when `band` is set. */

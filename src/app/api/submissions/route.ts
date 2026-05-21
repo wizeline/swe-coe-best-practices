@@ -135,27 +135,52 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
+  const result = body.result;
+
   const assessmentSession = await resolveSessionByCode(body.sessionCode);
 
   if (body.sessionCode && !assessmentSession) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
-  const created = await prisma.submission.create({
-    data: {
-      email,
-      sessionId: assessmentSession?.id ?? null,
-      totalScore: body.result.totalScore,
-      maxScore: body.result.maxScore,
-      completion: body.result.completion,
-      scoreLevel: null,
-      answers: body.answers as unknown as Prisma.InputJsonValue,
-      result: {
-        ...body.result,
-        scoreLevel: undefined,
-      } as unknown as Prisma.InputJsonValue,
-    },
-    include: { session: { select: { code: true, name: true } } },
+  const created = await prisma.$transaction(async (tx) => {
+    const submission = await tx.submission.create({
+      data: {
+        email,
+        sessionId: assessmentSession?.id ?? null,
+        totalScore: result.totalScore,
+        maxScore: result.maxScore,
+        completion: result.completion,
+        scoreLevel: null,
+        answers: body.answers as unknown as Prisma.InputJsonValue,
+        result: {
+          ...result,
+          scoreLevel: undefined,
+        } as unknown as Prisma.InputJsonValue,
+      },
+      include: { session: { select: { code: true, name: true } } },
+    });
+
+    if (assessmentSession) {
+      await tx.sessionParticipant.upsert({
+        where: {
+          sessionId_email: {
+            sessionId: assessmentSession.id,
+            email,
+          },
+        },
+        create: {
+          sessionId: assessmentSession.id,
+          email,
+          lastSubmittedAt: submission.submittedAt,
+        },
+        update: {
+          lastSubmittedAt: submission.submittedAt,
+        },
+      });
+    }
+
+    return submission;
   });
 
   return NextResponse.json(toSubmissionRecord(created), { status: 201 });

@@ -72,6 +72,10 @@ export async function getLatestSubmissionByEmail(
 }
 
 export async function loadOwnedSessions(): Promise<AssessmentSessionRecord[]> {
+  return loadUserSessions();
+}
+
+export async function loadUserSessions(): Promise<AssessmentSessionRecord[]> {
   return requestJson<AssessmentSessionRecord[]>("/api/sessions");
 }
 

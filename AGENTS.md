@@ -55,6 +55,7 @@ Prisma models (see `prisma/schema.prisma`):
 | ------------------- | ------------------------------------------------------------------- |
 | `Submission`        | Completed assessments (`email`, `answers`, `result`, `submittedAt`) |
 | `AssessmentSession` | Team sessions for group assessments                                 |
+| `SessionParticipant` | Explicit membership for users who have submitted in a team session |
 
 Never query Prisma directly from client components: use `src/lib/storage.ts` and `/api/*` route handlers.
 

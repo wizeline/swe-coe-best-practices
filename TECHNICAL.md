@@ -182,9 +182,11 @@ src/
 Prisma models:
 
 - `AssessmentSession` - owner-created team voting sessions with shareable codes
+- `SessionParticipant` - explicit membership for users who have submitted into a team session
 - `Submission` - completed assessments with full answer history
 
 Session owners can create and delete their own `AssessmentSession` records from the dashboard.
+Users who vote inside a team session are recorded in `SessionParticipant`, which lets the dashboard list joined sessions even when the user no longer has the original `?session=CODE` URL.
 Configured admins can access `/admin` to compare all sessions and inspect database-wide activity counts.
 The admin report supports `from`, `to`, `sort`, and `page` query params for date filtering, ordering, and pagination. Team drilldown uses `/admin/team/[code]` and preserves active report filters in the URL for return navigation.
 

@@ -41,11 +41,12 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 | /           | Redirects based on auth state                                                 |
 | /login      | Google sign-in page                                                           |
 | /assessment | Individual or team-session voting form (auth required)                        |
-| /dashboard  | Personal results plus owned team session reports (auth required)              |
+| /dashboard  | Personal results plus owned and joined team session views (auth required)     |
 | /playbook   | Markdown-backed engineering playbook organized by pillar (auth required)      |
 | /admin      | Admin-only cross-team comparison plus database activity stats (auth required) |
 
 Team session reports include one prioritized action item per pillar, selected based on the team's average results and relevance to their current score level. The action item shown is the next achievable improvement goal.
+Users who participate in a team session can reopen that session from the dashboard and see their own latest submission plus their personal action items, while the aggregated team report remains owner-only.
 Dashboard score cards now show current level, next target level, and points remaining to reach it (individual and team views).
 Category/pillar breakdown rows show score as `current / 4.0` and the gap to optimal to make distance-to-target explicit.
 Dashboard session cards show each session's creation date, and the create-session field guides naming with the `Team - Quarter` pattern.

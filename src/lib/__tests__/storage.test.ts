@@ -240,6 +240,7 @@ describe("session API storage", () => {
       ownerEmail: "owner@test.com",
       createdAt: new Date().toISOString(),
       isOwner: true,
+      isParticipant: false,
     };
     mockJsonResponse(payload);
 
@@ -259,6 +260,7 @@ describe("session API storage", () => {
       ownerEmail: "owner@test.com",
       createdAt: new Date().toISOString(),
       isOwner: true,
+      isParticipant: false,
     };
     mockJsonResponse(payload, true, 201);
 

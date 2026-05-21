@@ -13,7 +13,7 @@ import {
   deleteAssessmentSession,
   getLatestSubmissionByEmail,
   getSessionByCode,
-  loadOwnedSessions,
+  loadUserSessions,
   loadTeamSubmissions,
 } from "@/lib/storage";
 import { ErrorToast } from "@/components/assessment/ErrorToast";
@@ -44,7 +44,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
   const searchParams = useSearchParams();
   const [userSubmission, setUserSubmission] = useState<SubmissionRecord | null>(null);
   const [teamStats, setTeamStats] = useState<TeamStats>(emptyTeamStats);
-  const [ownedSessions, setOwnedSessions] = useState<AssessmentSessionRecord[]>([]);
+  const [userSessions, setUserSessions] = useState<AssessmentSessionRecord[]>([]);
   const [selectedSession, setSelectedSession] = useState<AssessmentSessionRecord | null>(null);
   const [newSessionName, setNewSessionName] = useState("");
   const [joinSessionCode, setJoinSessionCode] = useState("");
@@ -57,6 +57,8 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
   const sessionCode = searchParams.get("session")?.trim().toUpperCase() ?? initialSessionCode;
   const canShowTeamView = Boolean(selectedSession?.isOwner);
   const isSessionView = Boolean(selectedSession);
+  const ownedSessions = userSessions.filter((session) => session.isOwner);
+  const joinedSessions = userSessions.filter((session) => !session.isOwner && session.isParticipant);
 
   useEffect(() => {
     let active = true;
@@ -65,7 +67,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
       setIsLoading(true);
       try {
         const [sessions, sessionRecord, latest] = await Promise.all([
-          loadOwnedSessions(),
+          loadUserSessions(),
           sessionCode ? getSessionByCode(sessionCode) : Promise.resolve(null),
           getLatestSubmissionByEmail(sessionCode ?? undefined),
         ]);
@@ -77,7 +79,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
         }
 
         if (active) {
-          setOwnedSessions(sessions);
+          setUserSessions(sessions);
           setSelectedSession(sessionRecord);
           setUserSubmission(latest);
           setTeamStats(nextTeamStats);
@@ -89,7 +91,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
         if (active) {
           setUserSubmission(null);
           setSelectedSession(null);
-          setOwnedSessions([]);
+          setUserSessions([]);
           setTeamStats(emptyTeamStats);
         }
       } finally {
@@ -150,7 +152,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
 
     try {
       await deleteAssessmentSession(session.id);
-      setOwnedSessions((current) => current.filter((item) => item.id !== session.id));
+      setUserSessions((current) => current.filter((item) => item.id !== session.id));
 
       if (selectedSession?.id === session.id) {
         router.push("/dashboard");
@@ -178,6 +180,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
         {!isSessionView && (
           <SessionHub
             ownedSessions={ownedSessions}
+            joinedSessions={joinedSessions}
             onDeleteSession={handleDeleteSession}
             deletingSessionId={deletingSessionId}
             joinSessionCode={joinSessionCode}
@@ -197,11 +200,22 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
         <div className="card form-card empty-state-card">
           <div className="empty-state-option">
             <div>
-              <strong>Individual assessment</strong>
-              <p>Complete the assessment on your own without a session.</p>
+              <strong>{isSessionView ? "Team session assessment" : "Individual assessment"}</strong>
+              <p>
+                {isSessionView && selectedSession
+                  ? `Submit your vote for ${selectedSession.name} to unlock your personal results and action items.`
+                  : "Complete the assessment on your own without a session."}
+              </p>
             </div>
-            <a href="/assessment" className="button solid">
-              Start assessment
+            <a
+              href={
+                isSessionView && selectedSession
+                  ? `/assessment?session=${encodeURIComponent(selectedSession.code)}`
+                  : "/assessment"
+              }
+              className="button solid"
+            >
+              {isSessionView ? "Vote in session" : "Start assessment"}
             </a>
           </div>
         </div>
@@ -215,6 +229,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
       {!isSessionView && (
         <SessionHub
           ownedSessions={ownedSessions}
+          joinedSessions={joinedSessions}
           selectedSession={selectedSession}
           onDeleteSession={handleDeleteSession}
           deletingSessionId={deletingSessionId}
@@ -235,7 +250,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
       {canShowTeamView && selectedSession ? (
         <TeamView stats={teamStats} selectedSession={selectedSession} />
       ) : userSubmission ? (
-        <ScoreCard result={userSubmission.result} email={userEmail} />
+        <ScoreCard result={userSubmission.result} email={userEmail} session={selectedSession} />
       ) : null}
     </div>
   );
@@ -243,6 +258,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
 
 interface SessionHubProps {
   ownedSessions: AssessmentSessionRecord[];
+  joinedSessions: AssessmentSessionRecord[];
   selectedSession?: AssessmentSessionRecord | null;
   onDeleteSession: (session: AssessmentSessionRecord) => Promise<void>;
   deletingSessionId: string | null;
@@ -259,6 +275,7 @@ interface SessionHubProps {
 
 function SessionHub({
   ownedSessions,
+  joinedSessions,
   selectedSession,
   onDeleteSession,
   deletingSessionId,
@@ -359,6 +376,40 @@ function SessionHub({
           ))}
         </div>
       )}
+
+      {joinedSessions.length > 0 && (
+        <div className="session-list">
+          <p className="session-list-heading">Joined sessions</p>
+          {joinedSessions.map((session) => (
+            <article
+              key={session.id}
+              className={`session-list-item ${selectedSession?.code === session.code ? "session-list-item--active" : ""}`}
+            >
+              <div>
+                <strong>{session.name}</strong>
+                <span className="session-code-badge">{session.code}</span>
+                <span className="session-created-at">
+                  Created {formatSessionCreatedAt(session.createdAt)}
+                </span>
+              </div>
+              <div className="session-list-actions">
+                <a
+                  href={`/assessment?session=${encodeURIComponent(session.code)}`}
+                  className="button ghost"
+                >
+                  Vote again
+                </a>
+                <a
+                  href={`/dashboard?session=${encodeURIComponent(session.code)}`}
+                  className="button solid"
+                >
+                  Your results
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -366,9 +417,10 @@ function SessionHub({
 interface ScoreCardProps {
   result: AssessmentResult;
   email: string;
+  session?: AssessmentSessionRecord | null;
 }
 
-function ScoreCard({ result, email }: ScoreCardProps) {
+function ScoreCard({ result, email, session }: ScoreCardProps) {
   const answered = result.categories.reduce((acc, cat) => acc + cat.answered, 0);
   const total = result.categories.reduce((acc, cat) => acc + cat.total, 0);
   const scoreProgress = getScoreLevelProgress(
@@ -394,6 +446,12 @@ function ScoreCard({ result, email }: ScoreCardProps) {
             {answered}/{total} answered
           </p>
         </header>
+
+        {session && (
+          <p className="score-next-level">
+            Personal results for team session <strong>{session.name}</strong> ({session.code})
+          </p>
+        )}
 
         <div className="score-ring" aria-label="total score">
           <strong>{result.totalScore}</strong>

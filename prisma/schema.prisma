@@ -33,6 +33,20 @@ model AssessmentSession {
   ownerEmail String
   createdAt  DateTime     @default(now())
   submissions Submission[]
+  participants SessionParticipant[]
 
   @@index([ownerEmail, createdAt])
+}
+
+model SessionParticipant {
+  id              String   @id @default(cuid())
+  sessionId        String
+  email            String
+  joinedAt         DateTime @default(now())
+  lastSubmittedAt  DateTime?
+  session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, email])
+  @@index([email, joinedAt])
+  @@index([sessionId, lastSubmittedAt])
 }

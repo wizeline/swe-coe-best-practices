@@ -98,6 +98,7 @@ export interface AssessmentSessionRecord {
   ownerEmail: string;
   createdAt: string;
   isOwner: boolean;
+  isParticipant: boolean;
 }
 
 export interface TeamStats {

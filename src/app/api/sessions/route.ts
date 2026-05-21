@@ -4,16 +4,26 @@ import { prisma } from "@/lib/prisma";
 import { AssessmentSessionRecord } from "@/types/assessment";
 
 function toSessionRecord(
-  session: { id: string; code: string; name: string; ownerEmail: string; createdAt: Date },
+  session: {
+    id: string;
+    code: string;
+    name: string;
+    ownerEmail: string;
+    createdAt: Date;
+    participants?: Array<{ email: string }>;
+  },
   currentEmail: string
 ): AssessmentSessionRecord {
+  const isOwner = session.ownerEmail === currentEmail;
+
   return {
     id: session.id,
     code: session.code,
     name: session.name,
     ownerEmail: session.ownerEmail,
     createdAt: session.createdAt.toISOString(),
-    isOwner: session.ownerEmail === currentEmail,
+    isOwner,
+    isParticipant: session.participants?.some((participant) => participant.email === currentEmail) ?? false,
   };
 }
 
@@ -48,12 +58,28 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code")?.trim().toUpperCase();
 
   if (code) {
-    const session = await prisma.assessmentSession.findUnique({ where: { code } });
+    const session = await prisma.assessmentSession.findUnique({
+      where: { code },
+      include: {
+        participants: {
+          where: { email },
+          select: { email: true },
+        },
+      },
+    });
     return NextResponse.json(session ? toSessionRecord(session, email) : null);
   }
 
   const sessions = await prisma.assessmentSession.findMany({
-    where: { ownerEmail: email },
+    where: {
+      OR: [{ ownerEmail: email }, { participants: { some: { email } } }],
+    },
+    include: {
+      participants: {
+        where: { email },
+        select: { email: true },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 

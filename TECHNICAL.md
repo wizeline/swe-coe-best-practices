@@ -3,6 +3,14 @@
 Engineering guide for running, developing, and deploying the application.  
 For product context and scoring definition see [PRODUCT.md](PRODUCT.md).
 
+## Quick Start
+
+1. Install dependencies
+2. Configure environment variables
+3. Start PostgreSQL locally
+4. Run migrations
+5. Start the development server
+
 ## Stack
 
 - Next.js 16 (App Router, TypeScript strict)
@@ -20,7 +28,7 @@ For product context and scoring definition see [PRODUCT.md](PRODUCT.md).
 npm install
 ```
 
-1. Configure environment variables:
+2. Configure environment variables:
 
 ```bash
 cp .env.example .env
@@ -39,16 +47,7 @@ Optional configuration variables:
 
 - `NEXT_PUBLIC_MAX_RECOMMENDATIONS` (default: 1) - Number of action items to display per pillar in assessment results and team reports. Use `NEXT_PUBLIC_` prefix to make it accessible on the client.
 
-## Content-driven AI Tooling View
-
-- Route: `/playbook`
-- Source of truth: `content/playbook.md`
-- Loader/parser: `src/lib/playbookContent.ts`
-- Rendering: server-side page in `src/app/playbook/page.tsx` using `react-markdown`
-
-The markdown file is intentionally grouped by `## Pillar ...` headings. Inside each pillar, use `###` for a playbook entry and `#### Do this`, `#### Why this works`, and `#### How to` for the colored guidance blocks. The parser keeps intro content separate and turns each pillar heading into a standalone section card so content editors can add or reorder guidance without touching React code.
-
-1. Start local PostgreSQL with Docker:
+3. Start local PostgreSQL with Docker:
 
 ```bash
 docker run --name swe-postgres \
@@ -64,19 +63,28 @@ Set `DATABASE_URL` in `.env` to:
 DATABASE_URL="postgresql://postgres:secret@localhost:5432/swe_dev"
 ```
 
-1. Create/update the local database schema:
+4. Create or update the local database schema:
 
 ```bash
 npm run prisma:migrate:dev
 ```
 
-1. Start development server:
+5. Start the development server:
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Content-driven AI Tooling View
+
+- Route: `/playbook`
+- Source of truth: `content/playbook.md`
+- Loader/parser: `src/lib/playbookContent.ts`
+- Rendering: server-side page in `src/app/playbook/page.tsx` using `react-markdown`
+
+The markdown file is intentionally grouped by `## Pillar ...` headings. Inside each pillar, use `###` for a playbook entry and `#### Do this`, `#### Why this works`, and `#### How to` for the colored guidance blocks. The parser keeps intro content separate and turns each pillar heading into a standalone section card so content editors can add or reorder guidance without touching React code.
 
 ## Local Docker Workflow
 
@@ -185,10 +193,11 @@ Prisma models:
 - `SessionParticipant` - explicit membership for users who have submitted into a team session
 - `Submission` - completed assessments with full answer history
 
-Session owners can create and delete their own `AssessmentSession` records from the dashboard.
-Users who vote inside a team session are recorded in `SessionParticipant`, which lets the dashboard list joined sessions even when the user no longer has the original `?session=CODE` URL.
-Configured admins can access `/admin` to compare all sessions and inspect database-wide activity counts.
-The admin report supports `from`, `to`, `sort`, and `page` query params for date filtering, ordering, and pagination. Team drilldown uses `/admin/team/[code]` and preserves active report filters in the URL for return navigation.
+- Session owners can create and delete their own `AssessmentSession` records from the dashboard
+- Users who vote inside a team session are recorded in `SessionParticipant`, which lets the dashboard list joined sessions even when the user no longer has the original `?session=CODE` URL
+- Configured admins can access `/admin` to compare all sessions and inspect database-wide activity counts
+- The admin report supports `from`, `to`, `sort`, and `page` query params for filtering, ordering, and pagination
+- Team drilldown uses `/admin/team/[code]` and preserves active report filters in the URL for return navigation
 
 `Submission` also stores denormalized metrics (`totalScore`, `maxScore`, `completion`, `scoreLevel`) to support more efficient reporting and future DB-level aggregations.
 

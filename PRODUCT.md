@@ -4,13 +4,22 @@ Product definition and scoring model for the assessment experience.
 
 > For the complete framework reference (pillars, questions, rubrics, recommendations, and the Engineering Excellence Cycle) in a stakeholder-readable format, see [FRAMEWORK.md](FRAMEWORK.md).
 
-## Product Overview
+## At A Glance
 
 Internal tool for self-assessing engineering practices across five pillars at a personal level. Developers score 16 of their own habits on a 1-4 scale and receive a score level, weighted pillar scores, and prioritized recommendations.
 
+## Core Experience
+
+- Personal self-assessment across 5 pillars and 16 questions
+- Dynamic score bands derived from the active framework size
+- Per-pillar action items based on the current score level
+- Team sessions where owners can see aggregated reports
+- Joined-session access where participants can reopen their own latest result and action items
+- Repository analysis as an alternative input method for dashboard results
+
 ## What It Measures
 
-Five pillars, each with 2-3 questions scored 1 (Foundational) to 4 (Strategic):
+Five pillars, each with 2-4 questions scored from 1 (`Foundational`) to 4 (`Strategic`):
 
 | Pillar                         | Focus                                                                                                           |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
@@ -34,6 +43,14 @@ Raw score range: dynamic (`0..questionCount * 4`)
 
 The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScore)` in `src/lib/scoring.ts`, so adding/removing questions automatically rescales all bands.
 
+## Dashboard And Session Behavior
+
+- Individual submissions show the user's own score, level, category breakdown, and action items
+- Team session owners can open an aggregate team view with team score, level, participant summaries, and action items
+- Team session participants can reopen joined sessions from the dashboard and see their own latest submission in that session
+- Aggregated team data remains owner-only
+- Dashboard cards show current level and next target level for both individual and team views
+
 ## Routes
 
 | Route       | Purpose                                                                       |
@@ -45,16 +62,14 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 | /playbook   | Markdown-backed engineering playbook organized by pillar (auth required)      |
 | /admin      | Admin-only cross-team comparison plus database activity stats (auth required) |
 
-Team session reports include one prioritized action item per pillar, selected based on the team's average results and relevance to their current score level. The action item shown is the next achievable improvement goal.
-Users who participate in a team session can reopen that session from the dashboard and see their own latest submission plus their personal action items, while the aggregated team report remains owner-only.
-Dashboard score cards now show current level, next target level, and points remaining to reach it (individual and team views).
-Category/pillar breakdown rows show score as `current / 4.0` and the gap to optimal to make distance-to-target explicit.
-Dashboard session cards show each session's creation date, and the create-session field guides naming with the `Team - Quarter` pattern.
-Draft answers are stored locally in the browser (localStorage) until the assessment is submitted.
-The admin page shows database-level counts for assessments, sessions, saved results, unique participants, and session owners.
-It also compares team sessions side by side using average score, score level, participation, completion, and per-pillar averages.
-Admins can filter and sort reports by session creation dates, paginate large cross-team reports, then open a dedicated team detail view with a back-to-report action to inspect submission history and running score evolution over time.
-The playbook is maintained in `content/playbook.md` and rendered into pillar sections so content can evolve without UI changes. Each pillar can include practice cards with `Do this`, `Why this works`, and `How to` guidance. AI is referenced within `How to` steps as a practical accelerator alongside the core technique.
+## Additional Product Notes
+
+- Team session reports show one prioritized action item per pillar based on the team's current score level
+- Category rows show score as `current / 4.0` to make progress easy to scan
+- Session cards include creation date and encourage a `Team - Quarter` naming pattern
+- Draft answers are stored locally in the browser until submission
+- The admin page shows database activity totals and cross-team comparisons with pagination, filtering, and drilldown
+- The playbook is maintained in `content/playbook.md` and rendered into pillar sections so content can evolve without UI changes
 
 ## Repository Analysis (Alternative Assessment Method)
 
@@ -62,48 +77,47 @@ In addition to the manual questionnaire, engineers can use an automated reposito
 
 ### How It Works
 
-1. **Get the prompt**: The analysis prompt is located in `prompts/repo-analysis.md` and is also available from a collapsible copyable section in `/assessment`
-2. **Run the prompt**: Copy the prompt and paste it into your AI assistant (ChatGPT, Claude, etc.)
-3. **Provide repository context**: Share your repository's:
-   - Directory structure (output of `ls -la` and `tree -L 2`)
-   - Recent commits (output of `git log --oneline -50`)
-   - CI/CD configuration (`.github/workflows/*.yml`, `.gitlab-ci.yml`, etc.)
-   - Test framework and coverage info
+1. Get the prompt from `prompts/repo-analysis.md` or from the copyable section in `/assessment`
+2. Run the prompt in your AI assistant of choice
+3. Provide repository context:
+   - directory structure
+   - recent commits
+   - CI/CD configuration
+   - test framework and coverage info
    - README and architecture documentation
-   - Package/dependency files
-4. **Get analysis**: The AI will analyze the signals and return:
-   - A minimal JSON block for dashboard submission
-   - A separate private recommendations section for the user
-     The private recommendations are not meant to be stored in the product.
+   - package and dependency files
+4. Receive two outputs:
+   - a minimal JSON block for dashboard submission
+   - a separate private recommendations section for the user
+5. Paste only the JSON into `/assessment` → `Repository Analysis`
+6. Review the result on the dashboard alongside questionnaire submissions
 
-   The submission JSON contains:
-   - Individual question scores (1-4 per question)
-   - Pillar scores
-   - Raw score (0-48)
-   - Score level (Foundational/Disciplined/Optimized/Strategic)
+The submission JSON contains:
 
-5. **Submit to dashboard**: Go to `/assessment` → "Repository Analysis" section → paste only the JSON content → submit
-6. **Track progress**: Results appear on your dashboard alongside questionnaire submissions
+- individual question scores
+- pillar scores
+- raw score
+- score level
 
 Route failures while submitting or loading assessment data are surfaced with toast notifications so users receive immediate feedback without losing form context.
 
 ### Advantages
 
-- **No manual effort**: Analysis happens automatically based on repository signals
-- **Language-agnostic**: Works with repositories in any programming language
-- **Objective**: Scores reflect actual practices, not self-reported perceptions
-- **Repeatable**: Run quarterly to measure improvement over time
-- **Actionable**: Recommendations are specific to your repository's score level
+- No manual effort: analysis happens automatically from repository signals
+- Language-agnostic: works with repositories in any programming language
+- More objective: scores reflect visible engineering evidence, not only self-reporting
+- Repeatable: can be run each cycle to compare progress over time
+- Actionable: recommendations stay tied to the repository's actual score level
 
 ### Scoring Basis
 
 The prompt analyzes:
 
-- **Commit message quality and frequency** (Ideation & Requirements)
-- **Code review discipline and automation** (Code & Delivery)
-- **Test coverage and CI/CD reliability** (Testing & Quality)
-- **README, architecture docs, and onboarding materials** (Documentation & Knowledge)
-- **Monitoring, incident response processes** (Operations & Process)
+- Commit message quality and frequency
+- Code review discipline and automation
+- Test coverage and CI/CD reliability
+- README, architecture docs, and onboarding materials
+- Monitoring and incident-response processes
 
 Results are stored identically to questionnaire submissions, so you can compare both methods and track progress over time.
 

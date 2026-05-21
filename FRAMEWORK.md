@@ -8,17 +8,17 @@
 > **Owners:** Daniel Martinez · Leslye Patiño Ortega  
 > **CoE:** Software Engineering — Excellence & Best Practices
 
----
+## How To Read This Document
+
+- Use this file when you need the human-readable framework definition
+- Use `src/data/assessmentTemplate.ts` when you need the machine-readable source used by the product
+- Keep both in sync whenever questions, scoring rules, or recommendations change
 
 ## Core Philosophy
 
-**Intent and Accountability over Tooling**  
-Engineering excellence lives in human intent (defining the *What* and *Why* rigorously) and human accountability (rigorous validation and verification). No tooling replaces these fundamentals.
+- **Intent and accountability over tooling:** Engineering excellence starts with clear intent and strong human accountability. Tooling can accelerate this work, but it does not replace it.
 
-**The True Role of AI**  
-AI and advanced automation do not replace engineering principles — they accelerate them. AI integration is successful only when it explicitly reduces operational toil without compromising systemic quality. Where AI use is restricted, engineers must target the highest standards of manual engineering discipline.
-
----
+- **The true role of AI:** AI and advanced automation do not replace engineering principles. They are useful only when they reduce toil without weakening quality, rigor, or accountability.
 
 ## Score State Scale
 
@@ -32,10 +32,8 @@ The framework measures an individual's or team's active operational state. Score
 | **Strategic** | 85% of max raw score and above, with no pillar below 3.0 | Systemic influence. Operating fully "over-the-loop," orchestrating complex cross-system architectures and agentic development pipelines. Professionals at this level define organization-wide engineering patterns, actively mentor peers, and manage macro-level systemic risks rather than line-level implementations. |
 
 **Per-question scale:** 1 = Foundational · 2 = Disciplined · 3 = Optimized · 4 = Strategic  
-**Raw score range:** dynamic (`0..questionCount × 4`) with runtime band resolution in `resolveScoreBands(maxScore)`
+**Raw score range:** dynamic (`0..questionCount × 4`) with runtime band resolution in `resolveScoreBands(maxScore)`  
 **Floor rule:** `Optimized` also requires every pillar average to be at least `2.5`; `Strategic` requires every pillar average to be at least `3.0`.
-
----
 
 ## The Engineering Excellence Cycle
 

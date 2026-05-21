@@ -27,12 +27,13 @@ The framework measures an individual's or team's active operational state. Score
 | Score State | Raw Score Rule | Definition |
 |---|---|---|
 | **Foundational** | Lower range below Disciplined threshold | Base adherence. The engineer follows standard Definition of Done protocols and coding conventions. Execution is reliable but predominantly ad-hoc, with minimal structural intent modeling or automated accelerators. Focus is on absorbing account-level ecosystem guardrails. |
-| **Disciplined** | Mid range below top 20% | Elite manual rigor. Exceptional autonomous delivery through extreme manual discipline. Characterized by consistent Spec-Driven Development, Docs-as-Code practices, modular architectural isolation, and zero syntax or deployment oversight. |
-| **Optimized** | Top 20% excluding top 10% | Efficiency multiplier. Successfully leverages AI, advanced scripting, and automated workflows to accelerate the elite manual disciplines established at the Disciplined tier. Operating as an "Intelligence Curator," the engineer uses automation to offload toil while retaining 100% human accountability over code quality, edge cases, and design parity. |
-| **Strategic** | Top 10% only | Systemic influence. Operating fully "over-the-loop," orchestrating complex cross-system architectures and agentic development pipelines. Professionals at this level define organization-wide engineering patterns, actively mentor peers, and manage macro-level systemic risks rather than line-level implementations. |
+| **Disciplined** | 43% to below 65% of max raw score | Elite manual rigor. Exceptional autonomous delivery through extreme manual discipline. Characterized by consistent Spec-Driven Development, Docs-as-Code practices, modular architectural isolation, and zero syntax or deployment oversight. |
+| **Optimized** | 65% to below 85% of max raw score, with no pillar below 2.5 | Efficiency multiplier. Successfully leverages AI, advanced scripting, and automated workflows to accelerate the elite manual disciplines established at the Disciplined tier. Operating as an "Intelligence Curator," the engineer uses automation to offload toil while retaining 100% human accountability over code quality, edge cases, and design parity. |
+| **Strategic** | 85% of max raw score and above, with no pillar below 3.0 | Systemic influence. Operating fully "over-the-loop," orchestrating complex cross-system architectures and agentic development pipelines. Professionals at this level define organization-wide engineering patterns, actively mentor peers, and manage macro-level systemic risks rather than line-level implementations. |
 
 **Per-question scale:** 1 = Foundational · 2 = Disciplined · 3 = Optimized · 4 = Strategic  
 **Raw score range:** dynamic (`0..questionCount × 4`) with runtime band resolution in `resolveScoreBands(maxScore)`
+**Floor rule:** `Optimized` also requires every pillar average to be at least `2.5`; `Strategic` requires every pillar average to be at least `3.0`.
 
 ---
 

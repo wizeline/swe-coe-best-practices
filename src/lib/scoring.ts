@@ -10,16 +10,20 @@ import {
 import { MAX_RECOMMENDATIONS_PER_PILLAR } from "@/lib/config";
 
 /**
- * Dynamic score-percentile boundaries.
+ * Dynamic score band boundaries.
  *
- * Strategic is always reserved for the top 10% of scores and Optimized
- * for the next 10% (top 20% excluding Strategic). The Disciplined minimum
- * can be adjusted and defaults to 50% of max score.
+ * Bands are resolved from the maximum possible raw score so the thresholds
+ * stay stable as percentages when the questionnaire changes.
  */
 export const SCORE_PERCENTILES = {
-  disciplinedMin: 0.5,
-  optimizedMin: 0.8,
-  strategicMin: 0.9,
+  disciplinedMin: 0.43,
+  optimizedMin: 0.65,
+  strategicMin: 0.85,
+} as const;
+
+export const SCORE_LEVEL_FLOORS = {
+  optimizedMinCategoryScore: 2.5,
+  strategicMinCategoryScore: 3,
 } as const;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -71,7 +75,7 @@ const SCORE_LEVELS: AssessmentResult["scoreLevel"][] = [
   "Strategic",
 ];
 
-export const getScoreLevel = (
+const resolveScoreLevelByTotal = (
   score: number,
   maxScore: number
 ): AssessmentResult["scoreLevel"] => {
@@ -89,6 +93,39 @@ export const getScoreLevel = (
   return "Strategic";
 };
 
+const resolveMaxAllowedLevelByCategoryScores = (
+  categoryScores?: number[]
+): AssessmentResult["scoreLevel"] => {
+  if (!categoryScores || categoryScores.length === 0) {
+    return "Strategic";
+  }
+
+  const minCategoryScore = Math.min(...categoryScores);
+
+  if (minCategoryScore < SCORE_LEVEL_FLOORS.optimizedMinCategoryScore) {
+    return "Disciplined";
+  }
+
+  if (minCategoryScore < SCORE_LEVEL_FLOORS.strategicMinCategoryScore) {
+    return "Optimized";
+  }
+
+  return "Strategic";
+};
+
+export const getScoreLevel = (
+  score: number,
+  maxScore: number,
+  categoryScores?: number[]
+): AssessmentResult["scoreLevel"] => {
+  const levelByTotal = resolveScoreLevelByTotal(score, maxScore);
+  const maxAllowedLevel = resolveMaxAllowedLevelByCategoryScores(categoryScores);
+
+  return SCORE_LEVELS[
+    Math.min(SCORE_LEVELS.indexOf(levelByTotal), SCORE_LEVELS.indexOf(maxAllowedLevel))
+  ];
+};
+
 export interface ScoreLevelProgress {
   currentLevel: AssessmentResult["scoreLevel"];
   nextLevel: AssessmentResult["scoreLevel"] | null;
@@ -96,8 +133,12 @@ export interface ScoreLevelProgress {
   pointsToNextLevel: number;
 }
 
-export const getScoreLevelProgress = (score: number, maxScore: number): ScoreLevelProgress => {
-  const currentLevel = getScoreLevel(score, maxScore);
+export const getScoreLevelProgress = (
+  score: number,
+  maxScore: number,
+  categoryScores?: number[]
+): ScoreLevelProgress => {
+  const currentLevel = getScoreLevel(score, maxScore, categoryScores);
   const currentIndex = SCORE_LEVELS.indexOf(currentLevel);
   const nextLevel = currentIndex >= SCORE_LEVELS.length - 1 ? null : SCORE_LEVELS[currentIndex + 1];
 
@@ -207,7 +248,11 @@ export const calculateAssessment = (
     totalScore,
     maxScore,
     completion: Number(clamp(completion, 0, 100).toFixed(0)),
-    scoreLevel: getScoreLevel(totalScore, maxScore),
+    scoreLevel: getScoreLevel(
+      totalScore,
+      maxScore,
+      categoryResults.map((category) => category.score)
+    ),
     categories: categoryResults,
   };
 };

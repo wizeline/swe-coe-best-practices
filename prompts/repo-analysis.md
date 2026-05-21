@@ -35,16 +35,19 @@ You will receive:
 
 Score-level bands are dynamic by maximum possible raw score (`maxScore = questionCount * 4`):
 
-- Strategic = top 10% of raw scores
-- Optimized = top 20% excluding Strategic (the next 10%)
-- Disciplined/Foundational = remaining lower ranges
+- Foundational = below 43% of raw score
+- Disciplined = 43% to below 65% of raw score
+- Optimized = 65% to below 85% of raw score, and only if every pillar score is at least 2.5
+- Strategic = 85% of raw score and above, and only if every pillar score is at least 3.0
 
 For 16 questions (maxScore 64), this maps to:
 
-- Foundational: 0-31
-- Disciplined: 32-51
-- Optimized: 52-57
-- Strategic: 58-64
+- Foundational: 0-27
+- Disciplined: 28-41
+- Optimized: 42-54
+- Strategic: 55-64
+
+If a raw score reaches the `Optimized` or `Strategic` range but any pillar misses its floor, downgrade the final `score_level` to the highest band allowed by the pillar floors.
 
 For each pillar, read the 2-3 questions and score them based on observable evidence from the repository.
 

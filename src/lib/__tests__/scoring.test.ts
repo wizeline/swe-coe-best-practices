@@ -9,10 +9,10 @@ import type { AssessmentModel, AnswerMap, ScoreValue } from "@/types/assessment"
 
 // Threshold model: 13 questions in one category, maxScore = 52.
 // Dynamic score bands for 52 are:
-//   Foundational: 0-25
-//   Disciplined: 26-41
-//   Optimized: 42-46 (top 20% excluding top 10%)
-//   Strategic: 47-52 (top 10%)
+//   Foundational: 0-22
+//   Disciplined: 23-33
+//   Optimized: 34-44
+//   Strategic: 45-52
 const thresholdModel: AssessmentModel = {
   title: "Threshold Test",
   description: "Threshold",
@@ -79,8 +79,8 @@ describe("getScoreLevelProgress", () => {
     expect(getScoreLevelProgress(32, 64)).toEqual({
       currentLevel: "Disciplined",
       nextLevel: "Optimized",
-      nextLevelMinScore: 52,
-      pointsToNextLevel: 20,
+      nextLevelMinScore: 42,
+      pointsToNextLevel: 10,
     });
   });
 
@@ -142,21 +142,29 @@ describe("calculateAssessment", () => {
 
     it("builds dynamic bands from maxScore", () => {
       expect(resolveScoreBands(52)).toEqual({
-        foundational: 25,
-        disciplined: 41,
-        optimized: 46,
+        foundational: 22,
+        disciplined: 33,
+        optimized: 44,
         strategic: Infinity,
       });
     });
 
-    it("labels score 41 as Disciplined and score 42 as Optimized", () => {
-      expect(getScoreLevel(41, 52)).toBe("Disciplined");
-      expect(getScoreLevel(42, 52)).toBe("Optimized");
+    it("labels score 33 as Disciplined and score 34 as Optimized", () => {
+      expect(getScoreLevel(33, 52)).toBe("Disciplined");
+      expect(getScoreLevel(34, 52)).toBe("Optimized");
     });
 
-    it("labels score 46 as Optimized and score 47 as Strategic", () => {
-      expect(getScoreLevel(46, 52)).toBe("Optimized");
-      expect(getScoreLevel(47, 52)).toBe("Strategic");
+    it("labels score 44 as Optimized and score 45 as Strategic", () => {
+      expect(getScoreLevel(44, 52)).toBe("Optimized");
+      expect(getScoreLevel(45, 52)).toBe("Strategic");
+    });
+
+    it("demotes Strategic to Optimized when a pillar is below the strategic floor", () => {
+      expect(getScoreLevel(55, 64, [3.4, 3.1, 2.9])).toBe("Optimized");
+    });
+
+    it("demotes Optimized to Disciplined when a pillar is below the optimized floor", () => {
+      expect(getScoreLevel(42, 64, [3.2, 2.4, 2.8])).toBe("Disciplined");
     });
 
     it("labels all-4 answers as Strategic", () => {
@@ -172,8 +180,8 @@ describe("calculateAssessment", () => {
       expect(calculateAssessment(thresholdModel, thresholdAnswers(2)).scoreLevel).toBe("Disciplined");
     });
 
-    it("labels all-3 answers as Disciplined (13 questions × 3 = 39)", () => {
-      expect(calculateAssessment(thresholdModel, thresholdAnswers(3)).scoreLevel).toBe("Disciplined");
+    it("labels all-3 answers as Optimized (13 questions × 3 = 39)", () => {
+      expect(calculateAssessment(thresholdModel, thresholdAnswers(3)).scoreLevel).toBe("Optimized");
     });
   });
 
@@ -252,18 +260,18 @@ describe("calculateAssessment", () => {
       const foundational = calculateAssessment(minimalModel, { q1: 1, q2: 1, q3: 1 });
       expect(foundational.categories.find((c) => c.id === "cat-a")!.suggestions[0]?.id).toBe("r1");
 
-      // totalScore=26 (13×2) → Disciplined (26–41 for maxScore=52) → tr2
+      // totalScore=26 (13×2) → Disciplined (23–33 for maxScore=52) → tr2
       const disciplined = calculateAssessment(thresholdModel, thresholdAnswers(2));
       expect(disciplined.categories.find((c) => c.id === "cat-t")!.suggestions[0]?.id).toBe("tr2");
 
-      // totalScore=44 (11×4) → Optimized (42–46 for maxScore=52) → tr3
+      // totalScore=40 (10×4) → Optimized (34–44 for maxScore=52) → tr3
       const optimizedAnswers = Object.fromEntries(
-        Array.from({ length: 11 }, (_, i) => [`tq${i}`, 4 as ScoreValue])
+        Array.from({ length: 10 }, (_, i) => [`tq${i}`, 4 as ScoreValue])
       );
       const optimized = calculateAssessment(thresholdModel, optimizedAnswers);
       expect(optimized.categories.find((c) => c.id === "cat-t")!.suggestions[0]?.id).toBe("tr3");
 
-      // totalScore=52 (13×4) → Strategic (top 10%) → strategic recommendation
+      // totalScore=52 (13×4) → Strategic (85%+) → strategic recommendation
       const strategic = calculateAssessment(thresholdModel, thresholdAnswers(4));
       expect(strategic.categories.find((c) => c.id === "cat-t")!.suggestions[0]?.id).toBe("tr4");
     });

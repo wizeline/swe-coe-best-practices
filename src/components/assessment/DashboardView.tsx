@@ -371,7 +371,11 @@ interface ScoreCardProps {
 function ScoreCard({ result, email }: ScoreCardProps) {
   const answered = result.categories.reduce((acc, cat) => acc + cat.answered, 0);
   const total = result.categories.reduce((acc, cat) => acc + cat.total, 0);
-  const scoreProgress = getScoreLevelProgress(result.totalScore, result.maxScore);
+  const scoreProgress = getScoreLevelProgress(
+    result.totalScore,
+    result.maxScore,
+    result.categories.map((category) => category.score)
+  );
   const scoreLevels: AssessmentResult["scoreLevel"][] = [
     "Foundational",
     "Disciplined",
@@ -483,7 +487,11 @@ interface TeamViewProps {
 }
 
 function TeamView({ stats, selectedSession }: TeamViewProps) {
-  const teamScoreProgress = getScoreLevelProgress(stats.averageTotalScore, stats.maxTotalScore);
+  const teamScoreProgress = getScoreLevelProgress(
+    stats.averageTotalScore,
+    stats.maxTotalScore,
+    Object.values(stats.categoryAverages)
+  );
   const scoreLevels: AssessmentResult["scoreLevel"][] = [
     "Foundational",
     "Disciplined",
@@ -536,10 +544,6 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
                     ? `Next: ${teamScoreProgress.nextLevel}`
                     : "Top level reached"}
                 </span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Participants</span>
-                <span className="stat-value">{stats.uniqueParticipants}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Total Responses</span>
@@ -627,7 +631,11 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
                   const latest = submissions[submissions.length - 1];
                   const latestTotalScore = latest.totalScore ?? latest.result.totalScore;
                   const latestMaxScore = latest.maxScore ?? latest.result.maxScore;
-                  const statusLevel = getScoreLevel(latestTotalScore, latestMaxScore);
+                  const statusLevel = getScoreLevel(
+                    latestTotalScore,
+                    latestMaxScore,
+                    latest.result.categories.map((category) => category.score)
+                  );
                   return (
                     <tr key={emailAddr}>
                       <td>{emailAddr}</td>

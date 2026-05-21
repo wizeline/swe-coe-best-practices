@@ -157,7 +157,11 @@ export async function POST(request: NextRequest) {
     const weightedSum = categories.reduce((acc, cat) => acc + cat.score * cat.weight, 0);
     const weightTotal = categories.reduce((acc, cat) => acc + cat.weight, 0);
     const overallScore = Number((weightTotal === 0 ? 0 : weightedSum / weightTotal).toFixed(2));
-    const scoreLevel = getScoreLevel(body.analysis.raw_score, TEMPLATE_MAX_SCORE);
+    const scoreLevel = getScoreLevel(
+      body.analysis.raw_score,
+      TEMPLATE_MAX_SCORE,
+      categories.map((category) => category.score)
+    );
 
     const created = await prisma.submission.create({
       data: {

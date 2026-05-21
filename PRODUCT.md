@@ -28,9 +28,9 @@ Raw score range: dynamic (`0..questionCount * 4`)
 | Band rule (by max score) | Label | Definition |
 | --- | --- | --- |
 | Bottom range up to Disciplined threshold | Foundational | Base adherence. Follows standard Definition of Done protocols and coding conventions. Execution is reliable but predominantly ad-hoc, with minimal structural intent modeling or automated accelerators. |
-| Mid range below top 20% | Disciplined | Elite manual rigor. Exceptional autonomous delivery through extreme manual discipline: consistent Spec-Driven Development, Docs-as-Code, modular architectural isolation, zero syntax or deployment oversight. |
-| Top 20% excluding top 10% | Optimized | Efficiency multiplier. Successfully leverages AI, advanced scripting, and automated workflows to accelerate the Disciplined-tier habits. Operates as an "Intelligence Curator" — uses automation to offload toil while retaining full human accountability over quality, edge cases, and design parity. |
-| Top 10% only | Strategic | Systemic influence. Operates fully "over-the-loop," orchestrating complex cross-system architectures and agentic pipelines. Defines organization-wide engineering patterns, actively mentors peers, and manages macro-level systemic risks. |
+| 43% to below 65% | Disciplined | Elite manual rigor. Exceptional autonomous delivery through extreme manual discipline: consistent Spec-Driven Development, Docs-as-Code, modular architectural isolation, zero syntax or deployment oversight. |
+| 65% to below 85%, with no pillar below 2.5 | Optimized | Efficiency multiplier. Successfully leverages AI, advanced scripting, and automated workflows to accelerate the Disciplined-tier habits. Operates as an "Intelligence Curator" — uses automation to offload toil while retaining full human accountability over quality, edge cases, and design parity. |
+| 85% and above, with no pillar below 3.0 | Strategic | Systemic influence. Operates fully "over-the-loop," orchestrating complex cross-system architectures and agentic pipelines. Defines organization-wide engineering patterns, actively mentors peers, and manages macro-level systemic risks. |
 
 The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScore)` in `src/lib/scoring.ts`, so adding/removing questions automatically rescales all bands.
 

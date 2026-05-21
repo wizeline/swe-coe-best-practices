@@ -156,7 +156,8 @@ graph TD
 > **Key invariants**
 >
 > - `scoring.ts` is pure - no browser or server APIs
-> - Score levels are dynamically derived from `maxScore` via `resolveScoreBands(maxScore)` (Strategic = top 10%, Optimized = next 10%)
+> - Score levels are dynamically derived from `maxScore` via `resolveScoreBands(maxScore)` using percentage bands: Foundational < 43%, Disciplined >= 43% and < 65%, Optimized >= 65% and < 85%, Strategic >= 85%
+> - `Optimized` also requires every category score to be at least `2.5`; `Strategic` requires every category score to be at least `3.0`
 > - `prisma.ts` owns the singleton Prisma client
 > - `storage.ts` is the only client-side API caller - never query Prisma from components
 

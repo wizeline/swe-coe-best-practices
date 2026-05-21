@@ -42,7 +42,8 @@ src/
 - **Per-question:** 1 = Foundational, 2 = Disciplined, 3 = Optimized, 4 = Strategic
 - **Raw score range:** dynamic (`0..questionCount * 4`)
 - **Score thresholds:** computed from max score by `resolveScoreBands(maxScore)` in `src/lib/scoring.ts`
-- **Top-band rule:** Strategic is always top 10% and Optimized is always the next 10% (top 20% excluding Strategic)
+- **Score band rule:** Foundational is below 43% of max score, Disciplined is 43% to below 65%, Optimized is 65% to below 85%, and Strategic is 85% and above
+- **Pillar floor rule:** `Optimized` requires every pillar average to be at least `2.5`; `Strategic` requires every pillar average to be at least `3.0`
 - `calculateAssessment(model, answers)` returns an `AssessmentResult`, the single source of truth for all scores
 - **Per-pillar recommendations:** Each pillar shows action items (default: 1 per pillar), the most relevant next-level recommendations based on current score. Configure via `NEXT_PUBLIC_MAX_RECOMMENDATIONS` environment variable in `src/lib/config.ts`.
 

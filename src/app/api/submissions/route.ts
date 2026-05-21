@@ -25,7 +25,8 @@ function toSubmissionRecord(data: {
   const totalScore = data.totalScore ?? parsedResult.totalScore ?? 0;
   const maxScore = data.maxScore ?? parsedResult.maxScore ?? 0;
   const completion = data.completion ?? parsedResult.completion ?? 0;
-  const computedScoreLevel = getScoreLevel(totalScore, maxScore);
+  const categoryScores = parsedResult.categories?.map((category) => category.score);
+  const computedScoreLevel = getScoreLevel(totalScore, maxScore, categoryScores);
 
   return {
     id: data.id,

@@ -6,8 +6,8 @@ This playbook turns assessment recommendations into practical team habits. Use i
 
 To avoid process fatigue and adapt to different team dynamics, execution requirements are structured into two distinct tracks:
 
-- **Foundational Track (Esencial):** Minimum viable practices focused on eliminating basic regressions, ensuring alignment, and stabilizing delivery. Mandatory for all squads.
-- **Advanced Track (Avanzado):** High-autonomy practices focused on automated governance, deep resilience, and scale. Intended for mature teams or high-risk services.
+- **Foundational Track:** Minimum viable practices focused on eliminating basic regressions, ensuring alignment, and stabilizing delivery. Mandatory for all squads.
+- **Advanced Track:** High-autonomy practices focused on automated governance, deep resilience, and scale. Intended for mature teams or high-risk services.
 
 ---
 
@@ -19,8 +19,8 @@ Treat the first summary, prompt output, or verbal request as a draft that still 
 
 ### Execution Tracks
 
-| Foundational Track (Esencial)                                                                                                                                                                                                        | Advanced Track (Avanzado)                                                                                                                                                                              |
-| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Foundational Track | Advanced Track |
+| :--- | :--- |
 | Rewrite the raw request into a structured ticket (Why, What, Acceptance Criteria) before touching code. Use an AI assistant to turn a vague request or Slack thread into a first-draft ticket, then review and correct each section. | Conduct formal peer-review/challenge sessions for any ticket with high ambiguity or cross-team dependencies. Explicitly map out product risks and edge-case behaviors during grooming before approval. |
 
 ### Jira Board / Ticket Checklist
@@ -58,7 +58,7 @@ Replace the example request above with your own and fill every section.
 
 ---
 
-## Pillar 2 - Design & Architecture (Includes Data Integrity)
+## Pillar 2 - Design & Architecture
 
 Make the intended design visible before implementation locks it in. Treat data consistency as an upfront design constraint, not an afterthought.
 
@@ -68,7 +68,7 @@ Make the intended design visible before implementation locks it in. Treat data c
 
 ### Execution Tracks
 
-| Foundational Track (Esencial)                                                                                                                                                                                                                          | Advanced Track (Avanzado)                                                                                                                                                                                                     |
+| Foundational Track                                                                                                                                                                                                                                     | Advanced Track                                                                                                                                                                                                                |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Produce a lightweight design text note or layout diagram for changes modifying database schemas, APIs, or data flows. Explicitly declare 1 rejected alternative, 1 security risk, and enforce strict input validation schemas at the service boundary. | Maintain formal Architecture Decision Records (ADRs) checked into the codebase repository under `/docs/adr`. Design atomic transactions for all multi-step writes across boundaries. Enforce automated database drift checks. |
 

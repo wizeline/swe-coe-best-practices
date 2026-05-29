@@ -26,6 +26,37 @@ interface TeamDetailInput {
   ownerEmail: string;
   createdAt: string;
   submissions: SubmissionRecord[];
+  orgCategoryAverages?: Record<string, number>;
+}
+
+function averageCategoryAverages(
+  sessions: Array<Pick<SessionComparisonRecord, "categoryAverages">>
+): Record<string, number> {
+  const totals: Record<string, { total: number; count: number }> = {};
+
+  sessions.forEach((session) => {
+    Object.entries(session.categoryAverages).forEach(([categoryId, score]) => {
+      if (!totals[categoryId]) {
+        totals[categoryId] = { total: 0, count: 0 };
+      }
+
+      totals[categoryId].total += score;
+      totals[categoryId].count += 1;
+    });
+  });
+
+  return Object.fromEntries(
+    Object.entries(totals).map(([categoryId, entry]) => [
+      categoryId,
+      Number((entry.total / entry.count).toFixed(2)),
+    ])
+  );
+}
+
+export function buildOrgCategoryAverages(
+  sessions: SessionComparisonInput[]
+): Record<string, number> {
+  return averageCategoryAverages(sessions.map(buildSessionComparisonRecord));
 }
 
 function averageCompletion(submissions: SubmissionRecord[]): number {
@@ -88,14 +119,17 @@ export function buildCrossTeamComparison(
   databaseStats: DatabaseStats,
   sessions: SessionComparisonInput[]
 ): CrossTeamComparison {
+  const sessionRecords = sessions
+    .map(buildSessionComparisonRecord)
+    .sort(
+      (left, right) =>
+        right.averageTotalScore - left.averageTotalScore || left.name.localeCompare(right.name)
+    );
+
   return {
     databaseStats,
-    sessions: sessions
-      .map(buildSessionComparisonRecord)
-      .sort(
-        (left, right) =>
-          right.averageTotalScore - left.averageTotalScore || left.name.localeCompare(right.name)
-      ),
+    orgCategoryAverages: buildOrgCategoryAverages(sessions),
+    sessions: sessionRecords,
   };
 }
 
@@ -220,6 +254,7 @@ export function buildTeamDetail(input: TeamDetailInput): TeamDetailRecord {
   const submissionsSorted = [...input.submissions].sort((left, right) =>
     left.submittedAt.localeCompare(right.submittedAt)
   );
+  const teamStats = buildTeamStats(input.submissions);
   const uniqueParticipants = new Set(submissionsSorted.map((submission) => submission.email)).size;
 
   let runningTotal = 0;
@@ -252,6 +287,8 @@ export function buildTeamDetail(input: TeamDetailInput): TeamDetailRecord {
     createdAt: input.createdAt,
     totalSubmissions: timeline.length,
     uniqueParticipants,
+    categoryAverages: teamStats.categoryAverages,
+    orgCategoryAverages: input.orgCategoryAverages ?? {},
     submissions: timeline,
   };
 }

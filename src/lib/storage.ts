@@ -3,6 +3,7 @@ import {
   AnalysisSubmissionResponse,
   AssessmentSessionRecord,
   AnswerMap,
+  OrganizationCategoryAveragesResponse,
   AssessmentResult,
   SubmissionRecord,
   TeamStats,
@@ -83,6 +84,14 @@ export async function getSessionByCode(code: string): Promise<AssessmentSessionR
   return requestJson<AssessmentSessionRecord | null>(
     `/api/sessions?code=${encodeURIComponent(code)}`
   );
+}
+
+export async function loadOrganizationCategoryAverages(): Promise<Record<string, number>> {
+  const response = await requestJson<OrganizationCategoryAveragesResponse>(
+    "/api/sessions/org-averages"
+  );
+
+  return response.categoryAverages;
 }
 
 export async function createAssessmentSession(name: string): Promise<AssessmentSessionRecord> {

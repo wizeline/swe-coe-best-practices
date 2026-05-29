@@ -180,6 +180,7 @@ src/
     api/                    # Route handlers for submissions, sessions
   components/
     assessment/             # UI components
+    charts/                 # Recharts-based analytics components
   data/                     # assessmentTemplate.ts
   lib/                      # scoring.ts, storage.ts, prisma.ts
   types/                    # assessment domain types
@@ -197,9 +198,14 @@ Prisma models:
 - Users who vote inside a team session are recorded in `SessionParticipant`, which lets the dashboard list joined sessions even when the user no longer has the original `?session=CODE` URL
 - Configured admins can access `/admin` to compare all sessions and inspect database-wide activity counts
 - The admin report supports `from`, `to`, `sort`, and `page` query params for filtering, ordering, and pagination
+- The admin report also renders always-visible analytics charts from the filtered session set: score-level distribution and filtered org pillar averages
 - Team drilldown uses `/admin/team/[code]` and preserves active report filters in the URL for return navigation
+- Team drilldown and the owner dashboard both render a radar chart comparing team pillar averages with the all-time org baseline
+- `/api/sessions/org-averages` returns `{ categoryAverages: Record<string, number> }` for authenticated dashboard clients that need the org baseline without direct Prisma access
 
 `Submission` also stores denormalized metrics (`totalScore`, `maxScore`, `completion`, `scoreLevel`) to support more efficient reporting and future DB-level aggregations.
+
+`CrossTeamComparison` now includes `orgCategoryAverages`, computed by averaging each session's pillar averages rather than every raw submission. This keeps the admin drilldown radar aligned with team-level comparison semantics.
 
 All assessment data is scoped to the authenticated session email on the server.
 Client components should use `src/lib/storage.ts`. Do not call Prisma directly from client-side code.

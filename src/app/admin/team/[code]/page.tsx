@@ -1,7 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { buildAdminReportHrefWithPage, buildTeamDetail, isAdminEmail } from "@/lib/admin";
+import { PillarRadarChart } from "@/components/charts";
+import { assessmentTemplate } from "@/data/assessmentTemplate";
+import {
+  buildAdminReportHrefWithPage,
+  buildOrgCategoryAverages,
+  buildTeamDetail,
+  isAdminEmail,
+} from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getScoreLevel } from "@/lib/scoring";
 import {
@@ -101,37 +108,77 @@ export default async function AdminTeamDetailPage({
 
   const code = routeParams.code.trim().toUpperCase();
 
-  const assessmentSession = await prisma.assessmentSession.findUnique({
-    where: { code },
-    include: {
-      submissions: {
-        select: {
-          id: true,
-          email: true,
-          sessionId: true,
-          totalScore: true,
-          maxScore: true,
-          completion: true,
-          scoreLevel: true,
-          result: true,
-          submittedAt: true,
+  const [assessmentSession, allSessions] = await Promise.all([
+    prisma.assessmentSession.findUnique({
+      where: { code },
+      include: {
+        submissions: {
+          select: {
+            id: true,
+            email: true,
+            sessionId: true,
+            totalScore: true,
+            maxScore: true,
+            completion: true,
+            scoreLevel: true,
+            result: true,
+            submittedAt: true,
+          },
+          orderBy: { submittedAt: "asc" },
         },
-        orderBy: { submittedAt: "asc" },
       },
-    },
-  });
+    }),
+    prisma.assessmentSession.findMany({
+      include: {
+        submissions: {
+          select: {
+            id: true,
+            email: true,
+            sessionId: true,
+            totalScore: true,
+            maxScore: true,
+            completion: true,
+            scoreLevel: true,
+            result: true,
+            submittedAt: true,
+          },
+          orderBy: { submittedAt: "asc" },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   if (!assessmentSession) {
     redirect(buildAdminReportHrefWithPage(filters, page));
   }
+
+  const orgCategoryAverages = buildOrgCategoryAverages(
+    allSessions.map((sessionRecord) => ({
+      id: sessionRecord.id,
+      code: sessionRecord.code,
+      name: sessionRecord.name,
+      ownerEmail: sessionRecord.ownerEmail,
+      createdAt: sessionRecord.createdAt.toISOString(),
+      submissions: sessionRecord.submissions.map(toSubmissionRecord),
+    }))
+  );
 
   const detail = buildTeamDetail({
     code: assessmentSession.code,
     name: assessmentSession.name,
     ownerEmail: assessmentSession.ownerEmail,
     createdAt: assessmentSession.createdAt.toISOString(),
+    orgCategoryAverages,
     submissions: assessmentSession.submissions.map(toSubmissionRecord),
   });
+
+  const radarPillars = assessmentTemplate.categories.map((category) => ({
+    id: category.id,
+    label: category.title,
+    teamAvg: detail.categoryAverages[category.id] ?? 0,
+    orgAvg: detail.orgCategoryAverages[category.id] ?? 0,
+  }));
 
   return (
     <section className="page-container">
@@ -147,6 +194,14 @@ export default async function AdminTeamDetailPage({
           Back to report
         </a>
       </div>
+
+      <section className="admin-chart-grid admin-chart-grid--team-detail" aria-label="team comparison charts">
+        <PillarRadarChart
+          pillars={radarPillars}
+          title="Team vs Org Baseline"
+          description="This team compared with the all-time org pillar average."
+        />
+      </section>
 
       <section className="submissions-table admin-table-section">
         <h3>Team Detail Timeline</h3>

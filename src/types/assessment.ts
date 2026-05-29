@@ -91,6 +91,10 @@ export interface AnalysisSubmissionResponse {
   submittedAt: string;
 }
 
+export interface OrganizationCategoryAveragesResponse {
+  categoryAverages: Record<string, number>;
+}
+
 export interface AssessmentSessionRecord {
   id: string;
   code: string;
@@ -136,6 +140,7 @@ export interface SessionComparisonRecord {
 
 export interface CrossTeamComparison {
   databaseStats: DatabaseStats;
+  orgCategoryAverages: Record<string, number>;
   sessions: SessionComparisonRecord[];
 }
 
@@ -165,6 +170,8 @@ export interface TeamDetailRecord {
   createdAt: string;
   totalSubmissions: number;
   uniqueParticipants: number;
+  categoryAverages: Record<string, number>;
+  orgCategoryAverages: Record<string, number>;
   submissions: TeamDetailSubmission[];
 }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PillarAveragesChart, ScoreLevelDistribution } from "@/components/charts";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { buildAdminReportHrefWithPage, buildAdminTeamDetailHref } from "@/lib/admin";
 import { formatSessionCreatedAt } from "@/lib/sessionDisplay";
@@ -17,6 +18,8 @@ type ResetStatus = "invalid-confirmation" | "reset-success" | null;
 interface AdminOverviewProps {
   data: CrossTeamComparison;
   sessions: SessionComparisonRecord[];
+  filteredSessions: SessionComparisonRecord[];
+  orgCategoryAverages: Record<string, number>;
   filters: AdminSessionFilters;
   pagination: AdminPagination;
   resetStatus: ResetStatus;
@@ -27,6 +30,8 @@ interface AdminOverviewProps {
 export function AdminOverview({
   data,
   sessions,
+  filteredSessions,
+  orgCategoryAverages,
   filters,
   pagination,
   resetStatus,
@@ -36,6 +41,25 @@ export function AdminOverview({
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const router = useRouter();
   const { databaseStats } = data;
+  void orgCategoryAverages;
+
+  const pillarAverages = assessmentTemplate.categories
+    .map((category) => {
+      const values = filteredSessions
+        .map((session) => session.categoryAverages[category.id])
+        .filter((value): value is number => typeof value === "number");
+
+      if (values.length === 0) {
+        return null;
+      }
+
+      return {
+        id: category.id,
+        label: category.title,
+        average: Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2)),
+      };
+    })
+    .filter((category): category is { id: string; label: string; average: number } => Boolean(category));
 
   return (
     <div className="admin-overview">
@@ -76,6 +100,11 @@ export function AdminOverview({
         {resetStatus === "reset-success" && (
           <p className="admin-reset-success">Database data deleted successfully.</p>
         )}
+      </section>
+
+      <section className="admin-chart-grid" aria-label="managerial charts">
+        <ScoreLevelDistribution sessions={filteredSessions} />
+        <PillarAveragesChart pillars={pillarAverages} />
       </section>
 
       <section className="card results-content-card admin-filter-card">

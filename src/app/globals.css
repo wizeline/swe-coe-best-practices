@@ -1837,6 +1837,109 @@ table tbody tr:last-child td {
   gap: clamp(20px, 3vw, 30px);
 }
 
+.admin-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-chart-grid--team-detail {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.chart-card {
+  padding: 18px;
+}
+
+.chart-card--wide {
+  grid-column: 1 / -1;
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.chart-card-header h3 {
+  font-size: 1rem;
+}
+
+.chart-card-header p {
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+}
+
+.chart-frame {
+  width: 100%;
+  height: 280px;
+}
+
+.chart-frame--tall,
+.chart-frame--ranking {
+  height: 320px;
+}
+
+.chart-frame--radar {
+  height: 360px;
+}
+
+.chart-empty-state {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--text-dim);
+  border: 1px dashed var(--surface-stroke);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(227, 44, 39, 0.03), rgba(255, 255, 255, 0.96));
+}
+
+.chart-metric-list {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.chart-metric-list--dual {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.chart-metric-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--surface-stroke);
+}
+
+.chart-metric-item--dual {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.chart-metric-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.chart-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 .admin-summary {
   margin-top: 8px;
 }
@@ -1979,6 +2082,21 @@ table tbody tr:last-child td {
   .shell {
     width: calc(100vw - 24px);
     padding: 22px 0 30px;
+  }
+
+  .admin-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-metric-list {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-frame,
+  .chart-frame--tall,
+  .chart-frame--ranking,
+  .chart-frame--radar {
+    height: 280px;
   }
 
   .dashboard-header,

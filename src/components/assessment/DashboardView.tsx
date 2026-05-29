@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PillarRadarChart } from "@/components/charts";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { formatSessionCreatedAt } from "@/lib/sessionDisplay";
 import { getPlaybookHrefForCategory } from "@/lib/playbookLinks";
@@ -13,6 +14,7 @@ import {
   deleteAssessmentSession,
   getLatestSubmissionByEmail,
   getSessionByCode,
+  loadOrganizationCategoryAverages,
   loadUserSessions,
   loadTeamSubmissions,
 } from "@/lib/storage";
@@ -44,6 +46,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
   const searchParams = useSearchParams();
   const [userSubmission, setUserSubmission] = useState<SubmissionRecord | null>(null);
   const [teamStats, setTeamStats] = useState<TeamStats>(emptyTeamStats);
+  const [orgCategoryAverages, setOrgCategoryAverages] = useState<Record<string, number>>({});
   const [userSessions, setUserSessions] = useState<AssessmentSessionRecord[]>([]);
   const [selectedSession, setSelectedSession] = useState<AssessmentSessionRecord | null>(null);
   const [newSessionName, setNewSessionName] = useState("");
@@ -73,9 +76,14 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
         ]);
 
         let nextTeamStats = emptyTeamStats;
+        let nextOrgCategoryAverages: Record<string, number> = {};
         if (sessionCode && sessionRecord?.isOwner) {
-          const teamSubmissions = await loadTeamSubmissions(sessionCode);
+          const [teamSubmissions, organizationCategoryAverages] = await Promise.all([
+            loadTeamSubmissions(sessionCode),
+            loadOrganizationCategoryAverages(),
+          ]);
           nextTeamStats = buildTeamStats(teamSubmissions);
+          nextOrgCategoryAverages = organizationCategoryAverages;
         }
 
         if (active) {
@@ -83,6 +91,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
           setSelectedSession(sessionRecord);
           setUserSubmission(latest);
           setTeamStats(nextTeamStats);
+          setOrgCategoryAverages(nextOrgCategoryAverages);
           setSessionError(sessionCode && !sessionRecord ? "Session not found." : "");
         }
       } catch (error) {
@@ -93,6 +102,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
           setSelectedSession(null);
           setUserSessions([]);
           setTeamStats(emptyTeamStats);
+          setOrgCategoryAverages({});
         }
       } finally {
         if (active) {
@@ -248,7 +258,11 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
         />
       )}
       {canShowTeamView && selectedSession ? (
-        <TeamView stats={teamStats} selectedSession={selectedSession} />
+        <TeamView
+          stats={teamStats}
+          selectedSession={selectedSession}
+          orgCategoryAverages={orgCategoryAverages}
+        />
       ) : userSubmission ? (
         <ScoreCard result={userSubmission.result} email={userEmail} session={selectedSession} />
       ) : null}
@@ -542,9 +556,10 @@ function ScoreCard({ result, email, session }: ScoreCardProps) {
 interface TeamViewProps {
   stats: TeamStats;
   selectedSession: AssessmentSessionRecord;
+  orgCategoryAverages: Record<string, number>;
 }
 
-function TeamView({ stats, selectedSession }: TeamViewProps) {
+function TeamView({ stats, selectedSession, orgCategoryAverages }: TeamViewProps) {
   const teamScoreProgress = getScoreLevelProgress(
     stats.averageTotalScore,
     stats.maxTotalScore,
@@ -558,6 +573,12 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
   ];
   const currentTeamLevelIndex = scoreLevels.indexOf(teamScoreProgress.currentLevel);
   const teamLevelProgressWidth = `${((currentTeamLevelIndex + 1) / scoreLevels.length) * 100}%`;
+  const radarPillars = assessmentTemplate.categories.map((category) => ({
+    id: category.id,
+    label: category.title,
+    teamAvg: stats.categoryAverages[category.id] ?? 0,
+    orgAvg: orgCategoryAverages[category.id] ?? 0,
+  }));
 
   return (
     <div>
@@ -646,6 +667,12 @@ function TeamView({ stats, selectedSession }: TeamViewProps) {
               })}
             </section>
           </article>
+
+          <PillarRadarChart
+            pillars={radarPillars}
+            title="Team vs Org Baseline"
+            description="Your session compared with the all-time org pillar average."
+          />
         </div>
 
         <article className="card results-content-card">

@@ -9,6 +9,7 @@ import {
   getSessionByCode,
   getLatestSubmissionByEmail,
   isInsufficientDataError,
+  loadOrganizationCategoryAverages,
   loadAllSubmissions,
   loadOwnedSessions,
   loadTeamSubmissions,
@@ -248,6 +249,20 @@ describe("session API storage", () => {
 
     expect(mockFetch).toHaveBeenCalledWith(
       "/api/sessions?code=TEAM42",
+      expect.objectContaining({ headers: expect.any(Object) })
+    );
+  });
+
+  it("loads organization category averages", async () => {
+    mockJsonResponse({ categoryAverages: { "pillar-1": 2.5, "pillar-2": 3.25 } });
+
+    await expect(loadOrganizationCategoryAverages()).resolves.toEqual({
+      "pillar-1": 2.5,
+      "pillar-2": 3.25,
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/sessions/org-averages",
       expect.objectContaining({ headers: expect.any(Object) })
     );
   });

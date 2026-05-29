@@ -194,6 +194,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       <AdminOverview
         data={comparison}
         sessions={paginatedSessions.items}
+        filteredSessions={filteredSessions}
+        orgCategoryAverages={comparison.orgCategoryAverages}
         filters={filters}
         pagination={{
           page: paginatedSessions.page,

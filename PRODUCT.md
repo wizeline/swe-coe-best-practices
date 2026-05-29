@@ -47,6 +47,7 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 
 - Individual submissions show the user's own score, level, category breakdown, and action items
 - Team session owners can open an aggregate team view with team score, level, participant summaries, and action items
+- Team session owners also see a radar chart comparing their team's pillar averages against the all-time org baseline
 - Team session participants can reopen joined sessions from the dashboard and see their own latest submission in that session
 - Aggregated team data remains owner-only
 - Dashboard cards show current level and next target level for both individual and team views
@@ -69,6 +70,8 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 - Session cards include creation date and encourage a `Team - Quarter` naming pattern
 - Draft answers are stored locally in the browser until submission
 - The admin page shows database activity totals and cross-team comparisons with pagination, filtering, and drilldown
+- The admin page also renders always-visible managerial charts scoped to the active date filter: score-level distribution and org pillar averages
+- Team detail drilldown under `/admin/team/[code]` adds a team-vs-org radar so managers can see where a single team diverges from the organization baseline
 - The playbook is maintained in `content/playbook.md` and rendered into pillar sections so content can evolve without UI changes
 
 ## Repository Analysis (Alternative Assessment Method)

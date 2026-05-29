@@ -5,6 +5,7 @@ import {
   buildAdminReportHrefWithPage,
   buildAdminTeamDetailHref,
   buildCrossTeamComparison,
+  buildOrgCategoryAverages,
   buildTeamDetail,
   isAdminEmail,
   paginateItems,
@@ -115,6 +116,10 @@ describe("buildCrossTeamComparison", () => {
     ]);
 
     expect(comparison.databaseStats).toEqual(databaseStats);
+    expect(comparison.orgCategoryAverages).toEqual({
+      "pillar-1": 16.5,
+      "pillar-2": 16.5,
+    });
     expect(comparison.sessions).toHaveLength(2);
     expect(comparison.sessions[0]).toEqual(
       expect.objectContaining({
@@ -169,6 +174,74 @@ describe("buildCrossTeamComparison", () => {
         latestSubmissionAt: null,
       })
     );
+    expect(comparison.orgCategoryAverages).toEqual({});
+  });
+
+  it("averages category scores across sessions with different participation", () => {
+    const comparison = buildCrossTeamComparison(
+      {
+        totalAssessments: 3,
+        totalSessions: 2,
+        uniqueParticipants: 3,
+        uniqueSessionOwners: 2,
+      },
+      [
+        {
+          id: "session-1",
+          code: "AAA111",
+          name: "Alpha",
+          ownerEmail: "owner-a@example.com",
+          createdAt: "2026-04-24T10:00:00.000Z",
+          submissions: [
+            makeSubmission("sub-1", "dev-a@example.com", 24, "2026-04-24T10:30:00.000Z"),
+            makeSubmission("sub-2", "dev-b@example.com", 28, "2026-04-24T10:45:00.000Z"),
+          ],
+        },
+        {
+          id: "session-2",
+          code: "BBB222",
+          name: "Beta",
+          ownerEmail: "owner-b@example.com",
+          createdAt: "2026-04-24T11:00:00.000Z",
+          submissions: [
+            makeSubmission("sub-3", "dev-c@example.com", 40, "2026-04-24T11:30:00.000Z"),
+          ],
+        },
+      ]
+    );
+
+    expect(comparison.orgCategoryAverages).toEqual({
+      "pillar-1": 16.5,
+      "pillar-2": 16.5,
+    });
+  });
+});
+
+describe("buildOrgCategoryAverages", () => {
+  it("returns direct org pillar averages without database stats", () => {
+    const averages = buildOrgCategoryAverages([
+      {
+        id: "session-1",
+        code: "AAA111",
+        name: "Alpha",
+        ownerEmail: "owner-a@example.com",
+        createdAt: "2026-04-24T10:00:00.000Z",
+        submissions: [makeSubmission("sub-1", "dev-a@example.com", 16, "2026-04-24T10:30:00.000Z")],
+      },
+      {
+        id: "session-2",
+        code: "BBB222",
+        name: "Beta",
+        ownerEmail: "owner-b@example.com",
+        createdAt: "2026-04-24T11:00:00.000Z",
+        submissions: [makeSubmission("sub-2", "dev-b@example.com", 32, "2026-04-24T11:30:00.000Z")],
+      },
+    ]);
+
+    expect(averages).toEqual({
+      "pillar-1": 12,
+      "pillar-2": 12,
+    });
   });
 });
 
@@ -233,6 +306,7 @@ describe("buildTeamDetail", () => {
       name: "Architecture Team",
       ownerEmail: "owner@example.com",
       createdAt: "2026-04-20T09:00:00.000Z",
+      orgCategoryAverages: { "pillar-1": 12, "pillar-2": 12 },
       submissions: [
         makeSubmission("sub-2", "b@example.com", 30, "2026-04-20T11:00:00.000Z"),
         makeSubmission("sub-1", "a@example.com", 20, "2026-04-20T10:00:00.000Z"),
@@ -241,6 +315,8 @@ describe("buildTeamDetail", () => {
 
     expect(detail.totalSubmissions).toBe(2);
     expect(detail.uniqueParticipants).toBe(2);
+    expect(detail.categoryAverages).toEqual({ "pillar-1": 12.5, "pillar-2": 12.5 });
+    expect(detail.orgCategoryAverages).toEqual({ "pillar-1": 12, "pillar-2": 12 });
     expect(detail.submissions.map((item) => item.id)).toEqual(["sub-1", "sub-2"]);
     expect(detail.submissions.map((item) => item.runningAverageScore)).toEqual([20, 25]);
   });

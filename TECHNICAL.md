@@ -202,6 +202,7 @@ Prisma models:
 - Team drilldown uses `/admin/team/[code]` and preserves active report filters in the URL for return navigation
 - Team drilldown and the owner dashboard both render a radar chart comparing team pillar averages with the all-time org baseline
 - `/api/sessions/org-averages` returns `{ categoryAverages: Record<string, number> }` for authenticated dashboard clients that need the org baseline without direct Prisma access
+- Personal dashboard results can render a read-only questionnaire review directly from `Submission.answers` plus `src/data/assessmentTemplate.ts`; this applies to manual questionnaire submissions, not repository-analysis submissions that persist empty `answers`
 
 `Submission` also stores denormalized metrics (`totalScore`, `maxScore`, `completion`, `scoreLevel`) to support more efficient reporting and future DB-level aggregations.
 
@@ -209,6 +210,8 @@ Prisma models:
 
 All assessment data is scoped to the authenticated session email on the server.
 Client components should use `src/lib/storage.ts`. Do not call Prisma directly from client-side code.
+
+The read-only answer review surface lives in `src/components/assessment/AssessmentReview.tsx` and is mounted from `DashboardView.tsx` only for personal result contexts. Team owner aggregate views never expose participant question-by-question submissions.
 
 ## Validate
 

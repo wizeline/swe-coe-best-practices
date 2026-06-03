@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AssessmentReview } from "@/components/assessment/AssessmentReview";
 import { PillarRadarChart } from "@/components/charts";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { formatSessionCreatedAt } from "@/lib/sessionDisplay";
@@ -264,7 +265,7 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
           orgCategoryAverages={orgCategoryAverages}
         />
       ) : userSubmission ? (
-        <ScoreCard result={userSubmission.result} email={userEmail} session={selectedSession} />
+        <ScoreCard submission={userSubmission} email={userEmail} session={selectedSession} />
       ) : null}
     </div>
   );
@@ -429,12 +430,15 @@ function SessionHub({
 }
 
 interface ScoreCardProps {
-  result: AssessmentResult;
+  submission: SubmissionRecord;
   email: string;
   session?: AssessmentSessionRecord | null;
 }
 
-function ScoreCard({ result, email, session }: ScoreCardProps) {
+function ScoreCard({ submission, email, session }: ScoreCardProps) {
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const { result } = submission;
+  const hasQuestionnaireAnswers = Object.values(submission.answers).some((answer) => answer !== undefined);
   const answered = result.categories.reduce((acc, cat) => acc + cat.answered, 0);
   const total = result.categories.reduce((acc, cat) => acc + cat.total, 0);
   const scoreProgress = getScoreLevelProgress(
@@ -496,6 +500,7 @@ function ScoreCard({ result, email, session }: ScoreCardProps) {
 
         <p className="progress-label">Level scale</p>
         <p className="email-badge">Submitted by: {email}</p>
+        <p className="score-next-level">Submitted on: {new Date(submission.submittedAt).toLocaleString()}</p>
       </article>
 
       <aside className="card dashboard-side-card">
@@ -522,6 +527,17 @@ function ScoreCard({ result, email, session }: ScoreCardProps) {
         <section className="dashboard-side-section dashboard-side-section--actions">
           <h3>Actions</h3>
           <div className="actions">
+            {hasQuestionnaireAnswers && (
+              <button
+                type="button"
+                className="button ghost"
+                onClick={() => setIsReviewOpen((current) => !current)}
+                aria-expanded={isReviewOpen}
+                aria-controls="assessment-review"
+              >
+                {isReviewOpen ? "Hide answers" : "Review answers"}
+              </button>
+            )}
             <a href="/assessment" className="button solid">
               New Assessment
             </a>
@@ -549,6 +565,10 @@ function ScoreCard({ result, email, session }: ScoreCardProps) {
           )}
         </section>
       </article>
+
+      {hasQuestionnaireAnswers && isReviewOpen && (
+        <AssessmentReview answers={submission.answers} submittedAt={submission.submittedAt} />
+      )}
     </div>
   );
 }

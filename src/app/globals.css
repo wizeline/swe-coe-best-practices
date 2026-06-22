@@ -1331,6 +1331,11 @@ body {
   grid-row: 3;
 }
 
+.assessment-review-card {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
 .results-content-card .score-breakdown,
 .results-content-card .suggestions {
   margin-top: 0;
@@ -1360,6 +1365,150 @@ body {
   border-radius: 8px;
   background: rgba(227, 44, 39, 0.05);
   border: 1px solid rgba(227, 44, 39, 0.18);
+}
+
+.assessment-review {
+  display: grid;
+  gap: 18px;
+}
+
+.assessment-review-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.assessment-review-header h3 {
+  font-size: 1rem;
+}
+
+.assessment-review-header p {
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.assessment-review-count {
+  border-radius: 999px;
+  background: var(--bg-soft);
+  border: 1px solid var(--surface-stroke);
+  padding: 6px 10px;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-family: var(--font-mono), monospace;
+  white-space: nowrap;
+}
+
+.assessment-review-category {
+  border: 1px solid var(--surface-stroke);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  padding: 18px;
+}
+
+.assessment-review-category-header p {
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.assessment-review-questions {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.assessment-review-question {
+  border-top: 1px solid var(--surface-stroke);
+  padding-top: 14px;
+}
+
+.assessment-review-question:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.assessment-review-question-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.assessment-review-question-index {
+  font-size: 0.72rem;
+  font-family: var(--font-mono), monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.assessment-review-question-header h5 {
+  margin-top: 6px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.assessment-review-selected {
+  border-radius: 999px;
+  background: rgba(227, 44, 39, 0.08);
+  border: 1px solid rgba(227, 44, 39, 0.2);
+  color: var(--brand-primary);
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-family: var(--font-mono), monospace;
+  white-space: nowrap;
+}
+
+.assessment-review-options {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.assessment-review-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid var(--surface-stroke);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.assessment-review-option input {
+  margin-top: 2px;
+}
+
+.assessment-review-option--selected {
+  border-color: rgba(227, 44, 39, 0.35);
+  background: rgba(227, 44, 39, 0.05);
+}
+
+.assessment-review-option-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.assessment-review-option-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.assessment-review-option-description {
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .assessment-review-options {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Dashboard shell — wraps session hub + score/team view */

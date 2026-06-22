@@ -46,9 +46,10 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 ## Dashboard And Session Behavior
 
 - Individual submissions show the user's own score, level, category breakdown, and action items
+- Individual questionnaire submissions can also be reopened in a read-only review mode from the dashboard so users can inspect the exact answers they selected
 - Team session owners can open an aggregate team view with team score, level, participant summaries, and action items
 - Team session owners also see a radar chart comparing their team's pillar averages against the all-time org baseline
-- Team session participants can reopen joined sessions from the dashboard and see their own latest submission in that session
+- Team session participants can reopen joined sessions from the dashboard, see their own latest submission in that session, and review their own answers in read-only mode
 - Aggregated team data remains owner-only
 - Dashboard cards show current level and next target level for both individual and team views
 
@@ -67,6 +68,7 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 
 - Team session reports show one prioritized action item per pillar based on the team's current score level
 - Category rows show score as `current / 4.0` to make progress easy to scan
+- Read-only answer review is limited to questionnaire submissions that store question-level answers; repository-analysis submissions continue to show summary results only
 - Session cards include creation date and encourage a `Team - Quarter` naming pattern
 - Draft answers are stored locally in the browser until submission
 - The admin page shows database activity totals and cross-team comparisons with pagination, filtering, and drilldown

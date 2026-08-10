@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import ReactMarkdown from "react-markdown";
-import { auth } from "@/auth";
 import { loadPlaybookContent } from "@/lib/playbookContent";
 
 const CALLOUT_LABELS = {
@@ -11,13 +9,6 @@ const CALLOUT_LABELS = {
 } as const;
 
 export default async function PlaybookPage() {
-  const session = await auth();
-  const userEmail = session?.user?.email;
-
-  if (!userEmail) {
-    redirect("/login?callbackUrl=/playbook");
-  }
-
   const content = await loadPlaybookContent();
 
   return (

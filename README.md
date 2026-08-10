@@ -1,9 +1,9 @@
 # SWE Best Practices Pulse
 
 > **This repository is the canonical source of truth** for Wizeline's Software Engineering Best Practices Framework.  
-> All changes to questions, scoring rubrics, pillar definitions, or recommendations must be committed here to take effect on the live platform.
+> All changes to questions, scoring rubrics, pillar definitions, or recommendations must be committed here to take effect on the live site.
 >
-> **Live platform:** https://swe-best-practices.vercel.app/  
+> **Live site:** https://wizeline.github.io/wz-int-swe-best-practices/  
 > **CoE:** Software Engineering — Excellence & Best Practices
 
 ## What This Repo Contains
@@ -11,7 +11,15 @@
 This repository serves two audiences at the same time:
 
 - Product and framework owners who need a human-readable reference for the framework
-- Engineers who need the app, scoring logic, prompts, and persistence model that power the live platform
+- Engineers who need the app, scoring logic, and prompts that power the live site
+
+## Deployment
+
+The site is a **static Next.js export** hosted on **GitHub Pages**. There is no backend, database, or authentication.
+
+- Assessment results are calculated in the browser and stored in `localStorage`. They persist across page reloads but are local to the user's browser and device.
+- Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/deploy.yml`), which builds the static site and deploys it to GitHub Pages automatically.
+- To restore the full server-backed version (auth, Prisma, team sessions), see the `v1-with-backend` git tag.
 
 ## Read This First
 

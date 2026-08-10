@@ -3,12 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
-import { clearDraft, loadDraft, saveDraft } from "@/lib/draftStorage";
+import { clearDraft, loadDraft, saveResult, saveDraft } from "@/lib/draftStorage";
 import { hintToScoreGuides } from "@/lib/questionOptions";
 import { calculateAssessment } from "@/lib/scoring";
-import { addSubmission, getSessionByCode } from "@/lib/storage";
 import { ErrorToast } from "@/components/assessment/ErrorToast";
-import { AnswerMap, AssessmentSessionRecord, ScoreValue } from "@/types/assessment";
+import { AnswerMap, ScoreValue } from "@/types/assessment";
 
 const scaleConfig: { value: ScoreValue; label: string }[] = [
   { value: 1, label: "Foundational" },
@@ -17,12 +16,7 @@ const scaleConfig: { value: ScoreValue; label: string }[] = [
   { value: 4, label: "Strategic" },
 ];
 
-interface AssessmentFormProps {
-  userEmail: string;
-  initialSessionCode: string | null;
-}
-
-export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentFormProps) {
+export function AssessmentForm() {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -30,14 +24,11 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
   const [formError, setFormError] = useState("");
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [assessmentSession, setAssessmentSession] = useState<AssessmentSessionRecord | null>(null);
-  const [sessionError, setSessionError] = useState("");
   const [toastError, setToastError] = useState("");
   const formRef = useRef<HTMLElement>(null);
 
   const totalPillars = assessmentTemplate.categories.length;
   const activeCategory = assessmentTemplate.categories[currentPillar];
-  const sessionKey = initialSessionCode ?? "personal";
 
   useEffect(() => {
     let active = true;
@@ -45,26 +36,13 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
     async function fetchDraft() {
       setIsLoadingDraft(true);
       try {
-        const [draft, sessionRecord] = await Promise.all([
-          loadDraft(sessionKey),
-          initialSessionCode ? getSessionByCode(initialSessionCode) : Promise.resolve(null),
-        ]);
-        if (active) {
-          setAnswers(draft);
-          setAssessmentSession(sessionRecord);
-          setSessionError(
-            initialSessionCode && !sessionRecord
-              ? "Team session not found. Your answers will stay local until you join a valid session."
-              : ""
-          );
-        }
+        const draft = await loadDraft();
+        if (active) setAnswers(draft);
       } catch (error) {
         console.error("Draft load error:", error);
         setToastError(error instanceof Error ? error.message : "Failed to load data.");
       } finally {
-        if (active) {
-          setIsLoadingDraft(false);
-        }
+        if (active) setIsLoadingDraft(false);
       }
     }
 
@@ -73,7 +51,7 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
     return () => {
       active = false;
     };
-  }, [initialSessionCode, sessionKey]);
+  }, []);
 
   const updateAnswer = (questionId: string, value: ScoreValue) => {
     const updated = { ...answers, [questionId]: value };
@@ -84,7 +62,7 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
 
     setAnswers(updated);
 
-    void saveDraft(updated, sessionKey).catch((error) => {
+    void saveDraft(updated).catch((error) => {
       console.error("Draft save error:", error);
     });
 
@@ -120,13 +98,9 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
     setFormError("");
     try {
       const result = calculateAssessment(assessmentTemplate, answers);
-      await addSubmission(answers, result, initialSessionCode ?? undefined);
-      await clearDraft(sessionKey);
-      router.push(
-        initialSessionCode
-          ? `/dashboard?session=${encodeURIComponent(initialSessionCode)}`
-          : "/dashboard"
-      );
+      saveResult(result, answers);
+      await clearDraft();
+      router.push("/dashboard");
     } catch (error) {
       console.error("Submission error:", error);
       setToastError(error instanceof Error ? error.message : "Failed to submit assessment.");
@@ -137,7 +111,7 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
 
   const handleReset = () => {
     setAnswers({});
-    void clearDraft(sessionKey).catch((error) => {
+    void clearDraft().catch((error) => {
       console.error("Draft clear error:", error);
     });
     setFormError("");
@@ -188,15 +162,8 @@ export function AssessmentForm({ userEmail, initialSessionCode }: AssessmentForm
         <header className="card-header">
           <div className="form-header-row">
             <h2>{assessmentTemplate.title}</h2>
-            <span className="email-badge">{userEmail}</span>
           </div>
           {isLoadingDraft && <p>Loading your saved draft...</p>}
-          {assessmentSession && (
-            <div className="session-banner">
-              <strong>Team session:</strong> {assessmentSession.name} ({assessmentSession.code})
-            </div>
-          )}
-          {sessionError && <p className="form-error">{sessionError}</p>}
 
           {/* Scale legend strip */}
           <div className="scale-legend" aria-label="Scoring scale reference">

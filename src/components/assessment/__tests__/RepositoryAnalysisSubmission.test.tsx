@@ -3,19 +3,7 @@ import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RepositoryAnalysisSubmission } from "@/components/assessment/RepositoryAnalysisSubmission";
 
-const push = vi.fn();
-const submitRepositoryAnalysis = vi.fn();
-const promptContent = `# Prompt
-
-Use this`;
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
-}));
-
-vi.mock("@/lib/storage", () => ({
-  submitRepositoryAnalysis: (...args: unknown[]) => submitRepositoryAnalysis(...args),
-}));
+const promptContent = `# Prompt\n\nUse this`;
 
 describe("RepositoryAnalysisSubmission", () => {
   let container: HTMLDivElement;
@@ -33,8 +21,6 @@ describe("RepositoryAnalysisSubmission", () => {
       configurable: true,
       value: { writeText },
     });
-    push.mockReset();
-    submitRepositoryAnalysis.mockReset();
   });
 
   afterEach(() => {
@@ -46,9 +32,7 @@ describe("RepositoryAnalysisSubmission", () => {
 
   it("renders the prompt inside a collapsible section", async () => {
     await act(async () => {
-      root.render(
-        <RepositoryAnalysisSubmission userEmail="dev@example.com" promptContent={promptContent} />
-      );
+      root.render(<RepositoryAnalysisSubmission promptContent={promptContent} />);
     });
 
     const summary = container.querySelector("details summary");
@@ -62,9 +46,7 @@ describe("RepositoryAnalysisSubmission", () => {
 
   it("copies the prompt to the clipboard", async () => {
     await act(async () => {
-      root.render(
-        <RepositoryAnalysisSubmission userEmail="dev@example.com" promptContent={promptContent} />
-      );
+      root.render(<RepositoryAnalysisSubmission promptContent={promptContent} />);
     });
 
     const copyButton = Array.from(container.querySelectorAll("button")).find(
@@ -80,13 +62,9 @@ describe("RepositoryAnalysisSubmission", () => {
     expect(container.textContent).toContain("Prompt copied to clipboard.");
   });
 
-  it("shows toast message when submission route fails", async () => {
-    submitRepositoryAnalysis.mockRejectedValueOnce(new Error("Failed to create submission"));
-
+  it("displays score and level locally when valid JSON is submitted", async () => {
     await act(async () => {
-      root.render(
-        <RepositoryAnalysisSubmission userEmail="dev@example.com" promptContent={promptContent} />
-      );
+      root.render(<RepositoryAnalysisSubmission promptContent={promptContent} />);
     });
 
     const jsonTextarea = container.querySelector(
@@ -102,7 +80,7 @@ describe("RepositoryAnalysisSubmission", () => {
         )?.set;
         setValue?.call(
           jsonTextarea,
-          '{"analysis":{"pillars":{},"raw_score":0,"maturity_level":"Foundational"}}'
+          '{"analysis":{"pillars":{},"raw_score":28,"score_level":"Optimized"}}'
         );
         jsonTextarea.dispatchEvent(new Event("input", { bubbles: true }));
       }
@@ -111,12 +89,43 @@ describe("RepositoryAnalysisSubmission", () => {
     const submitButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent === "Submit Analysis"
     );
-    expect(submitButton).toBeDefined();
 
     await act(async () => {
       submitButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Failed to create submission");
+    expect(container.textContent).toContain("Score: 28");
+    expect(container.textContent).toContain("Optimized");
+  });
+
+  it("shows error when JSON is missing required fields", async () => {
+    await act(async () => {
+      root.render(<RepositoryAnalysisSubmission promptContent={promptContent} />);
+    });
+
+    const jsonTextarea = container.querySelector(
+      "textarea.json-textarea:not(.prompt-textarea)"
+    ) as HTMLTextAreaElement | null;
+
+    await act(async () => {
+      if (jsonTextarea) {
+        const setValue = Object.getOwnPropertyDescriptor(
+          HTMLTextAreaElement.prototype,
+          "value"
+        )?.set;
+        setValue?.call(jsonTextarea, '{"analysis":{}}');
+        jsonTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+
+    const submitButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "Submit Analysis"
+    );
+
+    await act(async () => {
+      submitButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Invalid JSON format");
   });
 });

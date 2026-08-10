@@ -3,21 +3,23 @@
 Engineering guide for running, developing, and deploying the application.  
 For product context and scoring definition see [PRODUCT.md](PRODUCT.md).
 
-## Quick Start
+## Architecture
 
-1. Install dependencies
-2. Configure environment variables
-3. Start PostgreSQL locally
-4. Run migrations
-5. Start the development server
+The app is a **static Next.js export** (`output: 'export'`). There is no server, no database, and no authentication.
+
+- **Scoring:** Calculated client-side in `src/lib/scoring.ts` (pure functions).
+- **Drafts:** In-progress answers auto-saved to `localStorage` via `src/lib/draftStorage.ts`.
+- **Results:** After submission, `{ result, answers, submittedAt }` is written to `localStorage` under the key `assessment-result`. The dashboard reads from this key on mount.
+- **Playbook:** Markdown file read from `content/playbook.md` at build time by the server component in `src/app/playbook/page.tsx`.
+
+> **Legacy backend:** The `v1-with-backend` git tag preserves the version with Google OAuth, Prisma + Postgres persistence, and team sessions. Restoring it requires setting up environment variables and a Postgres instance.
 
 ## Stack
 
-- Next.js 16 (App Router, TypeScript strict)
+- Next.js 16 (App Router, TypeScript strict, `output: 'export'`)
 - Plain CSS (no Tailwind)
-- Auth.js (NextAuth v5) with Google provider
-- Prisma ORM + Next.js API routes for persistence
-- PostgreSQL (Neon on Vercel)
+- No authentication
+- No database or ORM
 - React Markdown for rendering maintainable content from versioned `.md` files
 
 ## Getting Started
@@ -28,54 +30,37 @@ For product context and scoring definition see [PRODUCT.md](PRODUCT.md).
 npm install
 ```
 
-2. Configure environment variables:
-
-```bash
-cp .env.example .env
-```
-
-Required auth variables:
-
-- GOOGLE_CLIENT_ID
-- GOOGLE_CLIENT_SECRET
-- AUTH_SECRET
-- ADMIN_EMAILS
-
-`ADMIN_EMAILS` should be a comma-separated list of user emails allowed to access the `/admin` route.
-
-Optional configuration variables:
-
-- `NEXT_PUBLIC_MAX_RECOMMENDATIONS` (default: 1) - Number of action items to display per pillar in assessment results and team reports. Use `NEXT_PUBLIC_` prefix to make it accessible on the client.
-
-3. Start local PostgreSQL with Docker:
-
-```bash
-docker run --name swe-postgres \
-  -e POSTGRES_PASSWORD=secret \
-  -e POSTGRES_DB=swe_dev \
-  -p 5432:5432 \
-  -d postgres:16
-```
-
-Set `DATABASE_URL` in `.env` to:
-
-```bash
-DATABASE_URL="postgresql://postgres:secret@localhost:5432/swe_dev"
-```
-
-4. Create or update the local database schema:
-
-```bash
-npm run prisma:migrate:dev
-```
-
-5. Start the development server:
+2. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000/wz-int-swe-best-practices](http://localhost:3000/wz-int-swe-best-practices).
+
+> Note: `basePath` is set to `/wz-int-swe-best-practices` in `next.config.ts` to match the GitHub Pages hosting path. The dev server reflects this.
+
+## Building
+
+```bash
+npm run build
+```
+
+Produces a fully static site in the `out/` directory. No environment variables are required.
+
+## Deployment
+
+Pushing to `main` triggers the GitHub Actions workflow at `.github/workflows/deploy.yml`, which:
+
+1. Runs `npm ci && npm run build`
+2. Uploads `out/` as a GitHub Pages artifact
+3. Deploys to `https://wizeline.github.io/wz-int-swe-best-practices`
+
+The `public/.nojekyll` file prevents GitHub Pages from ignoring the `_next/` asset folder.
+
+## Optional Configuration
+
+- `NEXT_PUBLIC_MAX_RECOMMENDATIONS` (default: 1) — Number of action items to display per pillar in assessment results. Defined in `src/lib/config.ts`.
 
 ## Content-driven AI Tooling View
 

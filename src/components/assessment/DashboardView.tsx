@@ -1,181 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AssessmentReview } from "@/components/assessment/AssessmentReview";
-import { PillarRadarChart } from "@/components/charts";
 import { assessmentTemplate } from "@/data/assessmentTemplate";
-import { formatSessionCreatedAt } from "@/lib/sessionDisplay";
+import { loadResult, LocalResult } from "@/lib/draftStorage";
 import { getPlaybookHrefForCategory } from "@/lib/playbookLinks";
-import { getScoreLevel, getScoreLevelProgress } from "@/lib/scoring";
-import {
-  buildTeamStats,
-  createAssessmentSession,
-  deleteAssessmentSession,
-  getLatestSubmissionByEmail,
-  getSessionByCode,
-  loadOrganizationCategoryAverages,
-  loadUserSessions,
-  loadTeamSubmissions,
-} from "@/lib/storage";
+import { getScoreLevelProgress } from "@/lib/scoring";
 import { ErrorToast } from "@/components/assessment/ErrorToast";
-import {
-  AssessmentResult,
-  AssessmentSessionRecord,
-  SubmissionRecord,
-  TeamStats,
-} from "@/types/assessment";
+import { AssessmentResult } from "@/types/assessment";
 
-interface DashboardViewProps {
-  userEmail: string;
-  initialSessionCode: string | null;
-}
-
-const emptyTeamStats: TeamStats = {
-  totalSubmissions: 0,
-  uniqueParticipants: 0,
-  averageTotalScore: 0,
-  maxTotalScore: 0,
-  categoryAverages: {},
-  categorySuggestions: {},
-  submissionsByEmail: {},
-};
-
-export function DashboardView({ userEmail, initialSessionCode }: DashboardViewProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [userSubmission, setUserSubmission] = useState<SubmissionRecord | null>(null);
-  const [teamStats, setTeamStats] = useState<TeamStats>(emptyTeamStats);
-  const [orgCategoryAverages, setOrgCategoryAverages] = useState<Record<string, number>>({});
-  const [userSessions, setUserSessions] = useState<AssessmentSessionRecord[]>([]);
-  const [selectedSession, setSelectedSession] = useState<AssessmentSessionRecord | null>(null);
-  const [newSessionName, setNewSessionName] = useState("");
-  const [joinSessionCode, setJoinSessionCode] = useState("");
-  const [sessionError, setSessionError] = useState("");
-  const [joinSessionError, setJoinSessionError] = useState("");
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+export function DashboardView() {
+  const [localResult, setLocalResult] = useState<LocalResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toastError, setToastError] = useState("");
-  const sessionCode = searchParams.get("session")?.trim().toUpperCase() ?? initialSessionCode;
-  const canShowTeamView = Boolean(selectedSession?.isOwner);
-  const isSessionView = Boolean(selectedSession);
-  const ownedSessions = userSessions.filter((session) => session.isOwner);
-  const joinedSessions = userSessions.filter((session) => !session.isOwner && session.isParticipant);
 
   useEffect(() => {
-    let active = true;
-
-    async function fetchData() {
-      setIsLoading(true);
-      try {
-        const [sessions, sessionRecord, latest] = await Promise.all([
-          loadUserSessions(),
-          sessionCode ? getSessionByCode(sessionCode) : Promise.resolve(null),
-          getLatestSubmissionByEmail(sessionCode ?? undefined),
-        ]);
-
-        let nextTeamStats = emptyTeamStats;
-        let nextOrgCategoryAverages: Record<string, number> = {};
-        if (sessionCode && sessionRecord?.isOwner) {
-          const [teamSubmissions, organizationCategoryAverages] = await Promise.all([
-            loadTeamSubmissions(sessionCode),
-            loadOrganizationCategoryAverages(),
-          ]);
-          nextTeamStats = buildTeamStats(teamSubmissions);
-          nextOrgCategoryAverages = organizationCategoryAverages;
-        }
-
-        if (active) {
-          setUserSessions(sessions);
-          setSelectedSession(sessionRecord);
-          setUserSubmission(latest);
-          setTeamStats(nextTeamStats);
-          setOrgCategoryAverages(nextOrgCategoryAverages);
-          setSessionError(sessionCode && !sessionRecord ? "Session not found." : "");
-        }
-      } catch (error) {
-        console.error("Dashboard load error:", error);
-        setToastError(error instanceof Error ? error.message : "Failed to load dashboard data.");
-        if (active) {
-          setUserSubmission(null);
-          setSelectedSession(null);
-          setUserSessions([]);
-          setTeamStats(emptyTeamStats);
-          setOrgCategoryAverages({});
-        }
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void fetchData();
-
-    return () => {
-      active = false;
-    };
-  }, [sessionCode]);
-
-  const handleCreateSession = async () => {
-    if (!newSessionName.trim()) {
-      setSessionError("Session name is required.");
-      return;
-    }
-
-    setIsCreatingSession(true);
-    setSessionError("");
     try {
-      const created = await createAssessmentSession(newSessionName.trim());
-      router.push(`/dashboard?session=${encodeURIComponent(created.code)}`);
+      setLocalResult(loadResult());
     } catch (error) {
-      console.error("Session create error:", error);
-      setToastError(error instanceof Error ? error.message : "Failed to create session.");
-      setIsCreatingSession(false);
-    }
-  };
-
-  const handleJoinSession = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmed = joinSessionCode.trim().toUpperCase();
-    if (!trimmed) {
-      setJoinSessionError("Enter a session code.");
-      return;
-    }
-
-    setJoinSessionError("");
-    window.location.assign(`/assessment?session=${encodeURIComponent(trimmed)}`);
-  };
-
-  const handleDeleteSession = async (session: AssessmentSessionRecord) => {
-    const shouldDelete = window.confirm(
-      `Delete session \"${session.name}\"? This cannot be undone.`
-    );
-    if (!shouldDelete) {
-      return;
-    }
-
-    setSessionError("");
-    setDeletingSessionId(session.id);
-
-    try {
-      await deleteAssessmentSession(session.id);
-      setUserSessions((current) => current.filter((item) => item.id !== session.id));
-
-      if (selectedSession?.id === session.id) {
-        router.push("/dashboard");
-        return;
-      }
-    } catch (error) {
-      console.error("Session delete error:", error);
-      setToastError(error instanceof Error ? error.message : "Failed to delete session.");
+      setToastError(error instanceof Error ? error.message : "Failed to load results.");
     } finally {
-      setDeletingSessionId(null);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
   if (isLoading) {
     return (
@@ -185,50 +33,18 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
     );
   }
 
-  if (!userSubmission && !canShowTeamView) {
+  if (!localResult) {
     return (
-      <div className="dashboard-shell">
-        {!isSessionView && (
-          <SessionHub
-            ownedSessions={ownedSessions}
-            joinedSessions={joinedSessions}
-            onDeleteSession={handleDeleteSession}
-            deletingSessionId={deletingSessionId}
-            joinSessionCode={joinSessionCode}
-            onJoinSessionCodeChange={(value) => {
-              setJoinSessionCode(value);
-              setJoinSessionError("");
-            }}
-            onJoinSession={handleJoinSession}
-            newSessionName={newSessionName}
-            onNewSessionNameChange={setNewSessionName}
-            onCreateSession={handleCreateSession}
-            isCreatingSession={isCreatingSession}
-            sessionError={sessionError}
-            joinSessionError={joinSessionError}
-          />
-        )}
-        <div className="card form-card empty-state-card">
-          <div className="empty-state-option">
-            <div>
-              <strong>{isSessionView ? "Team session assessment" : "Individual assessment"}</strong>
-              <p>
-                {isSessionView && selectedSession
-                  ? `Submit your vote for ${selectedSession.name} to unlock your personal results and action items.`
-                  : "Complete the assessment on your own without a session."}
-              </p>
-            </div>
-            <a
-              href={
-                isSessionView && selectedSession
-                  ? `/assessment?session=${encodeURIComponent(selectedSession.code)}`
-                  : "/assessment"
-              }
-              className="button solid"
-            >
-              {isSessionView ? "Vote in session" : "Start assessment"}
-            </a>
+      <div className="card form-card empty-state-card">
+        <ErrorToast message={toastError} onClose={() => setToastError("")} />
+        <div className="empty-state-option">
+          <div>
+            <strong>Individual assessment</strong>
+            <p>Complete the assessment to see your results and action items.</p>
           </div>
+          <a href="/assessment" className="button solid">
+            Start assessment
+          </a>
         </div>
       </div>
     );
@@ -237,208 +53,15 @@ export function DashboardView({ userEmail, initialSessionCode }: DashboardViewPr
   return (
     <div className="dashboard-shell">
       <ErrorToast message={toastError} onClose={() => setToastError("")} />
-      {!isSessionView && (
-        <SessionHub
-          ownedSessions={ownedSessions}
-          joinedSessions={joinedSessions}
-          selectedSession={selectedSession}
-          onDeleteSession={handleDeleteSession}
-          deletingSessionId={deletingSessionId}
-          joinSessionCode={joinSessionCode}
-          onJoinSessionCodeChange={(value) => {
-            setJoinSessionCode(value);
-            setJoinSessionError("");
-          }}
-          onJoinSession={handleJoinSession}
-          newSessionName={newSessionName}
-          onNewSessionNameChange={setNewSessionName}
-          onCreateSession={handleCreateSession}
-          isCreatingSession={isCreatingSession}
-          sessionError={sessionError}
-          joinSessionError={joinSessionError}
-        />
-      )}
-      {canShowTeamView && selectedSession ? (
-        <TeamView
-          stats={teamStats}
-          selectedSession={selectedSession}
-          orgCategoryAverages={orgCategoryAverages}
-        />
-      ) : userSubmission ? (
-        <ScoreCard submission={userSubmission} email={userEmail} session={selectedSession} />
-      ) : null}
+      <ScoreCard localResult={localResult} />
     </div>
   );
 }
 
-interface SessionHubProps {
-  ownedSessions: AssessmentSessionRecord[];
-  joinedSessions: AssessmentSessionRecord[];
-  selectedSession?: AssessmentSessionRecord | null;
-  onDeleteSession: (session: AssessmentSessionRecord) => Promise<void>;
-  deletingSessionId: string | null;
-  joinSessionCode: string;
-  onJoinSessionCodeChange: (value: string) => void;
-  onJoinSession: (event: FormEvent<HTMLFormElement>) => void;
-  newSessionName: string;
-  onNewSessionNameChange: (value: string) => void;
-  onCreateSession: () => void;
-  isCreatingSession: boolean;
-  sessionError: string;
-  joinSessionError: string;
-}
-
-function SessionHub({
-  ownedSessions,
-  joinedSessions,
-  selectedSession,
-  onDeleteSession,
-  deletingSessionId,
-  joinSessionCode,
-  onJoinSessionCodeChange,
-  onJoinSession,
-  newSessionName,
-  onNewSessionNameChange,
-  onCreateSession,
-  isCreatingSession,
-  sessionError,
-  joinSessionError,
-}: SessionHubProps) {
-  return (
-    <section className="card results-content-card session-hub-card">
-      <div className="session-hub-header">
-        <div>
-          <h3>Team Sessions</h3>
-          <p>Join with a session code, or create your own voting session for the team.</p>
-        </div>
-      </div>
-
-      <div className="session-list-heading">Join with code</div>
-      <form className="session-create-row" onSubmit={onJoinSession}>
-        <input
-          name="session"
-          value={joinSessionCode}
-          onChange={(event) => onJoinSessionCodeChange(event.target.value)}
-          placeholder="e.g. A1B2C3"
-          aria-label="Session code"
-          style={{ textTransform: "uppercase" }}
-        />
-        <button type="submit" className="button solid">
-          Join session
-        </button>
-      </form>
-      {joinSessionError && <p className="form-error">{joinSessionError}</p>}
-
-      <div className="session-list-heading session-subsection-spacing">Create new session</div>
-      <div className="session-create-row">
-        <input
-          value={newSessionName}
-          onChange={(event) => onNewSessionNameChange(event.target.value)}
-          placeholder="Team - Quarter"
-          aria-label="Session name"
-        />
-        <button
-          type="button"
-          className="button solid"
-          onClick={onCreateSession}
-          disabled={isCreatingSession}
-        >
-          {isCreatingSession ? "Creating…" : "Create Session"}
-        </button>
-      </div>
-      {sessionError && <p className="form-error">{sessionError}</p>}
-
-      {ownedSessions.length > 0 && (
-        <div className="session-list">
-          <p className="session-list-heading">Your sessions</p>
-          {ownedSessions.map((session) => (
-            <article
-              key={session.id}
-              className={`session-list-item ${selectedSession?.code === session.code ? "session-list-item--active" : ""}`}
-            >
-              <div>
-                <strong>{session.name}</strong>
-                <span className="session-code-badge">{session.code}</span>
-                <span className="session-created-at">
-                  Created {formatSessionCreatedAt(session.createdAt)}
-                </span>
-              </div>
-              <div className="session-list-actions">
-                <a
-                  href={`/assessment?session=${encodeURIComponent(session.code)}`}
-                  className="button ghost"
-                >
-                  Voting link
-                </a>
-                <a
-                  href={`/dashboard?session=${encodeURIComponent(session.code)}`}
-                  className="button solid"
-                >
-                  Team report
-                </a>
-                <button
-                  type="button"
-                  className="button ghost"
-                  onClick={() => {
-                    void onDeleteSession(session);
-                  }}
-                  disabled={deletingSessionId === session.id}
-                >
-                  {deletingSessionId === session.id ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-
-      {joinedSessions.length > 0 && (
-        <div className="session-list">
-          <p className="session-list-heading">Joined sessions</p>
-          {joinedSessions.map((session) => (
-            <article
-              key={session.id}
-              className={`session-list-item ${selectedSession?.code === session.code ? "session-list-item--active" : ""}`}
-            >
-              <div>
-                <strong>{session.name}</strong>
-                <span className="session-code-badge">{session.code}</span>
-                <span className="session-created-at">
-                  Created {formatSessionCreatedAt(session.createdAt)}
-                </span>
-              </div>
-              <div className="session-list-actions">
-                <a
-                  href={`/assessment?session=${encodeURIComponent(session.code)}`}
-                  className="button ghost"
-                >
-                  Vote again
-                </a>
-                <a
-                  href={`/dashboard?session=${encodeURIComponent(session.code)}`}
-                  className="button solid"
-                >
-                  Your results
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-interface ScoreCardProps {
-  submission: SubmissionRecord;
-  email: string;
-  session?: AssessmentSessionRecord | null;
-}
-
-function ScoreCard({ submission, email, session }: ScoreCardProps) {
+function ScoreCard({ localResult }: { localResult: LocalResult }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
-  const { result } = submission;
-  const hasQuestionnaireAnswers = Object.values(submission.answers).some((answer) => answer !== undefined);
+  const { result, answers, submittedAt } = localResult;
+  const hasQuestionnaireAnswers = Object.values(answers).some((answer) => answer !== undefined);
   const answered = result.categories.reduce((acc, cat) => acc + cat.answered, 0);
   const total = result.categories.reduce((acc, cat) => acc + cat.total, 0);
   const scoreProgress = getScoreLevelProgress(
@@ -464,12 +87,6 @@ function ScoreCard({ submission, email, session }: ScoreCardProps) {
             {answered}/{total} answered
           </p>
         </header>
-
-        {session && (
-          <p className="score-next-level">
-            Personal results for team session <strong>{session.name}</strong> ({session.code})
-          </p>
-        )}
 
         <div className="score-ring" aria-label="total score">
           <strong>{result.totalScore}</strong>
@@ -499,28 +116,23 @@ function ScoreCard({ submission, email, session }: ScoreCardProps) {
         </div>
 
         <p className="progress-label">Level scale</p>
-        <p className="email-badge">Submitted by: {email}</p>
-        <p className="score-next-level">Submitted on: {new Date(submission.submittedAt).toLocaleString()}</p>
+        <p className="score-next-level">
+          Submitted on: {new Date(submittedAt).toLocaleString()}
+        </p>
       </article>
 
       <aside className="card dashboard-side-card">
         <section className="dashboard-side-section">
           <div className="score-breakdown">
             <h3>Category Breakdown</h3>
-            {result.categories.map((category) => {
-              const pillarMax = 4;
-
-              return (
-                <div key={category.id} className="breakdown-row">
-                  <span>{category.title}</span>
-                  <div className="breakdown-metric">
-                    <strong>
-                      {category.score.toFixed(1)} / {pillarMax.toFixed(1)}
-                    </strong>
-                  </div>
+            {result.categories.map((category) => (
+              <div key={category.id} className="breakdown-row">
+                <span>{category.title}</span>
+                <div className="breakdown-metric">
+                  <strong>{category.score.toFixed(1)} / 4.0</strong>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -567,203 +179,8 @@ function ScoreCard({ submission, email, session }: ScoreCardProps) {
       </article>
 
       {hasQuestionnaireAnswers && isReviewOpen && (
-        <AssessmentReview answers={submission.answers} submittedAt={submission.submittedAt} />
+        <AssessmentReview answers={answers} submittedAt={submittedAt} />
       )}
-    </div>
-  );
-}
-
-interface TeamViewProps {
-  stats: TeamStats;
-  selectedSession: AssessmentSessionRecord;
-  orgCategoryAverages: Record<string, number>;
-}
-
-function TeamView({ stats, selectedSession, orgCategoryAverages }: TeamViewProps) {
-  const teamScoreProgress = getScoreLevelProgress(
-    stats.averageTotalScore,
-    stats.maxTotalScore,
-    Object.values(stats.categoryAverages)
-  );
-  const scoreLevels: AssessmentResult["scoreLevel"][] = [
-    "Foundational",
-    "Disciplined",
-    "Optimized",
-    "Strategic",
-  ];
-  const currentTeamLevelIndex = scoreLevels.indexOf(teamScoreProgress.currentLevel);
-  const teamLevelProgressWidth = `${((currentTeamLevelIndex + 1) / scoreLevels.length) * 100}%`;
-  const radarPillars = assessmentTemplate.categories.map((category) => ({
-    id: category.id,
-    label: category.title,
-    teamAvg: stats.categoryAverages[category.id] ?? 0,
-    orgAvg: orgCategoryAverages[category.id] ?? 0,
-  }));
-
-  return (
-    <div>
-      <div className="team-session-banner card form-card">
-        <div className="team-session-banner-copy">
-          <h3>{selectedSession.name}</h3>
-          <p>
-            Session code <strong>{selectedSession.code}</strong>. Share{" "}
-            <a href={`/assessment?session=${encodeURIComponent(selectedSession.code)}`}>
-              this voting link
-            </a>{" "}
-            with your team.
-          </p>
-        </div>
-        <a href="/dashboard" className="button ghost">
-          Back to dashboard
-        </a>
-      </div>
-
-      <div className="view-toggle">
-        <button className="toggle-btn active">
-          Team Overview ({stats.uniqueParticipants} people)
-        </button>
-      </div>
-
-      <div className="team-view">
-        <div className="dashboard-grid team-dashboard-grid">
-          <article className="card team-summary">
-            <h3>Team Summary</h3>
-            <div className="summary-stats">
-              <div className="stat-item">
-                <span className="stat-label">Team Average Score</span>
-                <span className="stat-value">
-                  {stats.averageTotalScore.toFixed(1)}/{stats.maxTotalScore}
-                </span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Team Level</span>
-                <span className="stat-value stat-value--compact">{teamScoreProgress.currentLevel}</span>
-                <span className="stat-note">
-                  {teamScoreProgress.nextLevel
-                    ? `Next: ${teamScoreProgress.nextLevel}`
-                    : "Top level reached"}
-                </span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Total Responses</span>
-                <span className="stat-value">{stats.totalSubmissions}</span>
-              </div>
-            </div>
-
-            <div className="team-level-progress" aria-label="team score level progress">
-              <div className="progress-wrap">
-                <div className="progress-bar" style={{ width: teamLevelProgressWidth }} />
-              </div>
-              <div className="level-scale" aria-hidden="true">
-                {scoreLevels.map((level, index) => (
-                  <span
-                    key={level}
-                    className={`level-scale-label ${index <= currentTeamLevelIndex ? "level-scale-label--active" : ""}`}
-                  >
-                    {level}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </article>
-
-          <article className="card category-average-card">
-            <section className="score-breakdown">
-              <h3>Average by Category</h3>
-              {assessmentTemplate.categories.map((category) => {
-                const avgScore = stats.categoryAverages[category.id] ?? 0;
-                const pillarMax = 4;
-
-                return (
-                  <div key={category.id} className="breakdown-row">
-                    <span>{category.title}</span>
-                    <div className="breakdown-metric">
-                      <strong>
-                        {avgScore.toFixed(1)} / {pillarMax.toFixed(1)}
-                      </strong>
-                    </div>
-                  </div>
-                );
-              })}
-            </section>
-          </article>
-
-          <PillarRadarChart
-            pillars={radarPillars}
-            title="Team vs Org Baseline"
-            description="Your session compared with the all-time org pillar average."
-          />
-        </div>
-
-        <article className="card results-content-card">
-          <section className="suggestions">
-            <h3>Team Action Items</h3>
-            {assessmentTemplate.categories.flatMap((category) =>
-              (stats.categorySuggestions[category.id] ?? []).map((suggestion) => (
-                <article key={suggestion.id} className="suggestion-item">
-                  <p className="suggestion-category">{category.title}</p>
-                  <h4>{suggestion.title}</h4>
-                  <p>{suggestion.action}</p>
-                  <Link href={getPlaybookHrefForCategory(category.id)} className="suggestion-link">
-                    Open playbook
-                  </Link>
-                </article>
-              ))
-            )}
-            {assessmentTemplate.categories.every(
-              (category) => (stats.categorySuggestions[category.id] ?? []).length === 0
-            ) && (
-              <p className="no-suggestions">Not enough team data yet to generate action items.</p>
-            )}
-          </section>
-        </article>
-
-        <div className="submissions-table">
-          <h3>Individual Submissions</h3>
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Overall Score</th>
-                  <th>Completion</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(stats.submissionsByEmail).map(([emailAddr, submissions]) => {
-                  const latest = submissions[submissions.length - 1];
-                  const latestTotalScore = latest.totalScore ?? latest.result.totalScore;
-                  const latestMaxScore = latest.maxScore ?? latest.result.maxScore;
-                  const statusLevel = getScoreLevel(
-                    latestTotalScore,
-                    latestMaxScore,
-                    latest.result.categories.map((category) => category.score)
-                  );
-                  return (
-                    <tr key={emailAddr}>
-                      <td>{emailAddr}</td>
-                      <td className="score-cell">
-                        <strong>
-                          {latestTotalScore}/{latestMaxScore}
-                        </strong>
-                      </td>
-                      <td>{latest.result.completion}%</td>
-                      <td>
-                        <span className="status-badge">{statusLevel}</span>
-                      </td>
-                      <td className="date-cell">
-                        {new Date(latest.submittedAt).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

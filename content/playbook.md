@@ -2,31 +2,40 @@
 
 This playbook turns assessment recommendations into practical team habits. Use it when you want concrete next steps for any of the five engineering practice pillars. Content is organized by pillar so the dashboard can link recommendations to the right section. Prefer durable engineering practices over tool-specific tricks.
 
+## Maturity Tracks
+
+To avoid process fatigue and adapt to different team dynamics, execution requirements are structured into two distinct tracks:
+
+- **Foundational Track:** Minimum viable practices focused on eliminating basic regressions, ensuring alignment, and stabilizing delivery. Mandatory for all squads.
+- **Advanced Track:** High-autonomy practices focused on automated governance, deep resilience, and scale. Intended for mature teams or high-risk services.
+
+---
+
 ## Pillar 1 - Ideation & Requirements
 
-Clarify the work before code is written.
+Clarify the work before code is written. Start from clarified intent.
 
-### Start from clarified intent
+Treat the first summary, prompt output, or verbal request as a draft that still needs engineering judgment. Challenge the first framing of the task before you implement it. Rewrite the request into a ticket with Why, What, acceptance criteria, and explicit unknowns.
 
-Treat the first summary, prompt output, or verbal request as a draft that still needs engineering judgment.
+### Execution Tracks
 
-#### Do this
+| Foundational Track | Advanced Track |
+| :--- | :--- |
+| Rewrite the raw request into a structured ticket (Why, What, Acceptance Criteria) before touching code. Use an AI assistant to turn a vague request or Slack thread into a first-draft ticket, then review and correct each section. | Conduct formal peer-review/challenge sessions for any ticket with high ambiguity or cross-team dependencies. Explicitly map out product risks and edge-case behaviors during grooming before approval. |
 
-Challenge the first framing of the task before you implement it. Rewrite the request into a ticket with `Why`, `What`, acceptance criteria, and explicit unknowns.
+### Jira Board / Ticket Checklist
 
-#### Why this works
+_Copy the text below directly into your Jira issue description or PR templates:_
 
-Most delivery mistakes start before coding: vague scope, hidden assumptions, and missing impact analysis. Teams that force clarity early avoid churn later, regardless of whether the first draft came from a PM, a teammate, or an AI assistant.
+```text
+h3. 📋 Ideation & Requirements Checklist
+- [ ] *Why:* Clear problem statement and who is harmed without this filled.
+- [ ] *What:* High-level engineering approach documented (e.g., middleware, configs).
+- [ ] *Acceptance Criteria:* At least one Given/When/Then scenario mapped out.
+- [ ] *Unknowns:* Explicit list of open questions or technical blind spots identified.
+```
 
-#### How to
-
-Rewrite the raw request into a structured ticket with `Why`, `What`, and `Acceptance Criteria` before touching code. Use an AI assistant to turn a vague request or Slack thread into a first-draft ticket, then review and correct each section before adopting it.
-
-Ask a teammate to challenge your assumptions before implementation starts, especially for new integrations or ambiguous scope. Every meaningful task needs three sections: `Why`, `What`, and `Acceptance Criteria`.
-
-Project reference: `prompts/gherkin.md`
-
-**Prompt template: Structured ticket**
+### Prompt template: Structured ticket
 
 ```text
 Convert the request below into an implementation-ready ticket.
@@ -47,31 +56,34 @@ Request: "Add a rate limit to the public login endpoint so the same IP
 Replace the example request above with your own and fill every section.
 ```
 
+---
+
 ## Pillar 2 - Design & Architecture
 
-Make the intended design visible before implementation locks it in.
+Make the intended design visible before implementation locks it in. Treat data consistency as an upfront design constraint, not an afterthought.
 
-### Make the design reviewable
+**1. Make the design reviewable:** Design issues are cheap to catch when the solution is still abstract. Visibility helps reviewers challenge assumptions about boundaries, reuse, auth, and failure modes before the team spends effort implementing the wrong thing.
 
-Use the playbook to force architecture decisions into a visible artifact, even if the first draft is just a sketch.
+**2. Enforce data integrity across services:** Data integrity issues compound over time. Define validation rules at every system boundary, use transactional logic for related writes, and add constraints at the database level.
 
-#### Do this
+### Execution Tracks
 
-Create a small design artifact before coding: a diagram, an ADR stub, or a written decision note with tradeoffs and security implications.
+| Foundational Track                                                                                                                                                                                                                                     | Advanced Track                                                                                                                                                                                                                |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Produce a lightweight design text note or layout diagram for changes modifying database schemas, APIs, or data flows. Explicitly declare 1 rejected alternative, 1 security risk, and enforce strict input validation schemas at the service boundary. | Maintain formal Architecture Decision Records (ADRs) checked into the codebase repository under `/docs/adr`. Design atomic transactions for all multi-step writes across boundaries. Enforce automated database drift checks. |
 
-#### Why this works
+### Jira Board / Ticket Checklist
 
-Design issues are cheap to catch when the solution is still abstract. Visibility helps reviewers challenge assumptions about boundaries, reuse, auth, and failure modes before the team spends effort implementing the wrong thing.
+```text
+h3. 📐 Design & Data Integrity Checklist
+- [ ] *Design Artifact:* Linked ADR, diagram, or structured text note to the ticket.
+- [ ] *Alternatives:* Stated at least 1 rejected option and why it was discarded.
+- [ ] *Security Risk:* Explicitly named 1 security hazard and its mitigation plan.
+- [ ] *Data Contracts:* Validation rules defined for all input fields at the system boundary.
+- [ ] *Write Boundaries:* Stated whether this requires multi-step transactional logic.
+```
 
-#### How to
-
-Before coding, produce a small design artifact: a diagram, an ADR stub, or a written decision note. Even a rough sketch is enough to get meaningful review. Use an AI assistant to draft an ADR, enumerate alternatives, or surface missing security considerations, then validate the output against the actual codebase and your team's standards.
-
-In the artifact, explicitly state one security risk and at least one alternative you rejected and why. For changes touching data flow, APIs, or auth, a diagram or ADR note is required before merge.
-
-Good artifact contents: context, decision, alternatives considered, tradeoffs, rollout notes, and one explicit security risk.
-
-**Prompt template: Architecture decision record**
+### Prompt template: Architecture decision record
 
 ```text
 I need to decide how to store user sessions for a new authentication flow.
@@ -91,106 +103,7 @@ Rollout:      [migration steps, feature flags, or phased delivery if needed]
 Replace the session-store example with your own decision and fill every field.
 ```
 
-## Pillar 3 - Development Hygiene
-
-Keep implementation changes small enough that intent stays visible in code review.
-
-### Optimize for reviewability
-
-Use AI only as an accelerator for mechanical work, not as a substitute for PR structure or code ownership decisions.
-
-#### Do this
-
-Split broad changes into reviewable slices with a single clear objective per PR, and keep docs updates coupled to the behavior they describe.
-
-#### Why this works
-
-Large undifferentiated PRs hide risk. When changes are sliced by responsibility, reviewers can reason about naming, architecture, and regression risk instead of scanning noise. This improves quality even on teams that never use AI.
-
-#### How to
-
-Outline the PR sequence in the ticket or PR description before coding: which slice goes first, what stays out of scope, what follows. Use an AI assistant to propose how to split a broad change into reviewable PRs, then validate the boundaries yourself so refactors, behavior changes, and docs updates stay coherent.
-
-Defer unrelated fixes to follow-up tickets rather than bundling them in. Each PR should answer one question clearly: refactor, new behavior, or documentation alignment. If the PR summary needs multiple paragraphs to explain scope, the slice is probably too large.
-
-**Prompt template: PR sequence plan**
-
-```text
-I need to add Google OAuth login to a Next.js app that currently uses
-email/password auth. The work touches the auth middleware, the login
-page UI, the session cookie logic, and the user profile endpoint.
-
-Break this into the smallest reviewable PR sequence. For each PR:
-- Objective: what does this PR do and nothing else?
-- Key files: which files or modules change?
-- Tests: what needs to be added or updated?
-- Out of scope: what explicitly waits for the next PR?
-
-Replace the OAuth example with your own feature and answer each field.
-```
-
-### Build reliable CI/CD pipelines
-
-Automate the path from code to production so every delivery is consistent, safe, and reversible.
-
-#### Do this
-
-Set up a CI pipeline that runs builds, tests, linting, and security checks automatically on every pull request. Add a deployment stage with environment promotion and rollback capabilities.
-
-#### Why this works
-
-Manual deployments and local-only testing introduce inconsistency and risk. A well-structured CI/CD pipeline catches problems early, enforces shared quality standards, and makes rollbacks predictable, reducing the cost of every release.
-
-#### How to
-
-Start with a minimal workflow that runs tests on every PR, then incrementally add linting, security scans, and deployment stages. Use an AI assistant to generate a pipeline config as a starting point, then review every step for correctness, security gaps, and coverage before committing it.
-
-Block merges when CI fails and treat a broken pipeline as a production incident. Pipeline changes go through the same review process as application code. Useful additions include environment-specific secrets management, deployment gates between staging and production, and automated smoke tests post-deploy.
-
-**Prompt template: Pipeline review**
-
-```text
-Review the GitHub Actions workflow below for a Node.js API service.
-Identify problems and suggest concrete improvements.
-
-Current workflow:
-  on: [push]
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - run: npm install
-        - run: npm test
-        - run: npm run deploy
-
-For each finding, explain:
-- What is the gap or risk?
-- What is the concrete fix (show the corrected YAML step if relevant)?
-- What gate or check is missing that would catch real problems?
-
-Replace the example workflow with your own and apply the same review.
-```
-
-### Enforce data integrity across services
-
-Treat data consistency as a design constraint, not an afterthought.
-
-#### Do this
-
-Define validation rules at every system boundary, use transactional logic for related writes, and add constraints at the database level. Document what guarantees each service provides and what it assumes from its inputs.
-
-#### Why this works
-
-Data integrity issues compound over time. Inconsistent records and silent corruption are hard to detect and expensive to recover from. Teams that design for correctness at the boundary, with clear contracts, validation, and observability, prevent entire categories of bugs from reaching production.
-
-#### How to
-
-Design validation rules at every boundary you own: API inputs, service contracts, and DB constraints, as part of the feature design, not as an afterthought. Use an AI assistant to review an API schema or data model for missing constraints, edge cases, or unvalidated fields, then evaluate each suggestion against actual business rules before applying it.
-
-Treat any unvalidated input reaching business logic as a defect and enforce it in code review. Good evidence of strong integrity practice: input validation at the API boundary, constraints in the DB schema, transactional writes for multi-step operations, and at least one test for an invalid-input scenario.
-
-**Prompt template: Data integrity review**
+### Prompt template: Data integrity review
 
 ```text
 Review this Prisma schema for a payments service and identify integrity gaps.
@@ -215,29 +128,97 @@ you add an alert or monitor to catch data anomalies early?
 Replace the Payment model with your own schema and apply the same review.
 ```
 
+---
+
+## Pillar 3 - Development Hygiene & CI/CD
+
+Keep implementation changes small enough that intent stays visible in code review. Automate the path from code to production safely.
+
+**1. Optimize for reviewability:** Split broad changes into reviewable slices with a single clear objective per PR, and keep docs updates coupled to the behavior they describe. Large undifferentiated PRs hide risk.
+
+**2. Build reliable CI/CD pipelines:** Automate the path from code to production so every delivery is consistent, safe, and reversible. Set up a CI pipeline that runs builds, tests, linting, and security checks automatically on every pull request.
+
+### Execution Tracks
+
+| Foundational Track (Esencial)                                                                                                                                                                                                       | Advanced Track (Avanzado)                                                                                                                                                                                                                            |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Limit PR scope to under 400 lines of code (LOC). Defer unrelated fixes to distinct follow-up tickets rather than bundling them. Ensure automated unit tests and code linters execute on every PR. Block merges on broken pipelines. | Utilize Stacked PR workflows or trunk-based development with explicit feature flags. Integrate automated dependency scanning, static application security testing (SAST), automated environment promotion gates, and standardized 1-click rollbacks. |
+
+### Jira Board / Ticket Checklist
+
+```text
+h3. 🚀 Development Hygiene & CI/CD Checklist
+- [ ] *Slicing:* Changes split into small, independently deployable PRs (<400 LOC).
+- [ ] *Isolation:* No unrelated refactors or secondary bugs fixed in this branch.
+- [ ] *Automation Check:* Linting, build compilation, and baseline unit tests passed in CI.
+- [ ] *Secrets & Configs:* Any new environment variables added securely to the pipeline.
+```
+
+### Prompt template: PR sequence plan
+
+```text
+I need to add Google OAuth login to a Next.js app that currently uses
+email/password auth. The work touches the auth middleware, the login
+page UI, the session cookie logic, and the user profile endpoint.
+
+Break this into the smallest reviewable PR sequence. For each PR:
+- Objective: what does this PR do and nothing else?
+- Key files: which files or modules change?
+- Tests: what needs to be added or updated?
+- Out of scope: what explicitly waits for the next PR?
+
+Replace the OAuth example with your own feature and answer each field.
+```
+
+### Prompt template: Pipeline review
+
+```text
+Review the GitHub Actions workflow below for a Node.js API service.
+Identify problems and suggest concrete improvements.
+
+Current workflow:
+  on: [push]
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - run: npm install
+        - run: npm test
+        - run: npm run deploy
+
+For each finding, explain:
+- What is the gap or risk?
+- What is the concrete fix (show the corrected YAML step if relevant)?
+- What gate or check is missing that would catch real problems?
+
+Replace the example workflow with your own and apply the same review.
+```
+
+---
+
 ## Pillar 4 - Quality Engineering
 
-Test the parts most likely to fail, not only the path most likely to demo well.
+Test the parts most likely to fail, not only the path most likely to demo well. Expand beyond the happy path.
 
-### Expand beyond the happy path
+Defects often survive because test planning mirrors the expected success path too closely. For every material change, identify one happy-path test, one edge case, and one failure mode. If you skip one of these, write down why.
 
-Use the playbook to expose edge cases, review gaps, and silent failure modes before merge.
+### Execution Tracks
 
-#### Do this
+| Foundational Track (Esencial)                                                                                                                                                                 | Advanced Track (Avanzado)                                                                                                                                                                |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Write at least one happy-path test and one error-handling/boundary test for all changes modifying core application logic. Require code reviewers to ask what happens when inputs are invalid. | Define rigorous integration tests for external contracts, mock complex side effects safely, and evaluate test suite strength via mutation analysis or automated stress/load simulations. |
 
-For every material change, identify one happy-path test, one edge case, and one failure mode. If you skip one of these, write down why.
+### Jira Board / Ticket Checklist
 
-#### Why this works
+```text
+h3. 🧪 Quality Engineering Checklist
+- [ ] *Happy Path:* Main success scenario covered with clean unit/integration assertions.
+- [ ] *Edge Case:* At least 1 boundary condition checked (extreme values, empty objects, nulls).
+- [ ] *Failure Mode:* Explicit test ensuring the application fails gracefully under system stress or bad network calls.
+```
 
-Defects often survive because test planning mirrors the expected success path too closely. Teams that explicitly test boundary conditions and recovery behavior catch bugs that optimistic implementations or optimistic AI-generated tests tend to miss.
-
-#### How to
-
-Before writing tests, identify one happy-path case, one edge case, and one failure mode for every material change. Use an AI assistant to generate additional test scenarios for a function or module, then compare each one against real invariants, production incidents, and regression history before accepting it.
-
-During PR review, ask what happens when inputs are invalid, external calls fail, or state is partially updated. Require reviewers to name the riskiest untested branch before approval. Good evidence: unit tests for logic, integration tests for contracts, and one note about observability or debugging signals.
-
-**Prompt template: Test coverage check**
+### Prompt template: Test coverage check
 
 ```text
 Here is a function that applies a discount code to a cart total:
@@ -257,29 +238,31 @@ For this function:
 Replace the discount function with your own code and apply the same analysis.
 ```
 
+---
+
 ## Pillar 5 - Operations & Maintenance
 
-Leave enough context behind that another engineer can safely operate what you ship.
+Leave enough context behind that another engineer can safely operate what you ship. Ship with an operational trail.
 
-### Ship with an operational trail
+The goal is not more documentation for its own sake. The goal is faster diagnosis, safer handoff, and fewer heroics after release. Document the minimum operational context needed to debug, support, and roll back the feature.
 
-The goal is not more documentation for its own sake. The goal is faster diagnosis, safer handoff, and fewer heroics after release.
+### Execution Tracks
 
-#### Do this
+| Foundational Track (Esencial)                                                                                                                | Advanced Track (Avanzado)                                                                                                                                                                                          |
+| :------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ensure structured logs capture exceptions. Write a 3-step rollback or toggle instruction directly inside the PR description or micro-README. | Configure custom OpenTelemetry domain metrics, structure alerts based on service-level objectives (SLOs), provide end-to-end trace correlation IDs, and maintain an updated automated fallback runbook repository. |
 
-Document the minimum operational context needed to debug, support, and roll back the feature: signals, failure symptoms, ownership, and first debugging steps.
+### Jira Board / Ticket Checklist
 
-#### Why this works
+```text
+h3. 🛠️ Operations & Maintenance Checklist
+- [ ] *Signals:* Key logging patterns or metrics identified to track health post-deploy.
+- [ ] *Symptom & Action:* First triage steps explicitly noted in case of anomalous behavior.
+- [ ] *Rollback Vector:* Clear step-by-step instructions to revert changes or turn off feature flags.
+- [ ] *Ownership:* Responsible on-call group or squad handle clearly declared.
+```
 
-Maintainability depends on what future engineers can see when things go wrong. AI can help draft support notes, but teams still need clear ownership, observability, and rollback thinking embedded in delivery.
-
-#### How to
-
-Before shipping, document the minimum operational context: signals to watch, failure symptoms, first debugging steps, and how to roll back. Use an AI assistant to draft a runbook or handoff note, then verify every monitoring reference, config detail, and rollback statement against the actual system before publishing it.
-
-Every change that affects operations should state what to watch, where to look first, and how to reduce blast radius. Minimum checklist: signals to watch, common failure modes, mitigation options, and who owns the area.
-
-**Prompt template: Operational runbook**
+### Prompt template: Operational runbook
 
 ```text
 I just shipped a background job that sends weekly summary emails to users.

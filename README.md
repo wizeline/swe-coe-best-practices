@@ -1,49 +1,46 @@
 # SWE Best Practices Pulse
 
-> **This repository is the canonical source of truth** for Wizeline's Software Engineering Best Practices Framework.  
-> All changes to questions, scoring rubrics, pillar definitions, or recommendations must be committed here to take effect on the live site.
->
-> **Live site:** https://wizeline.github.io/wz-int-swe-best-practices/  
-> **CoE:** Software Engineering — Excellence & Best Practices
+Static self-diagnostic for engineering habits. The tool helps an engineer score their current practices, review their answers, and get practical recommendations with AI prompt guides they can use in their next task.
+
+**Live site:** https://wizeline.github.io/wz-int-swe-best-practices/  
+**CoE:** Software Engineering — Excellence & Best Practices
 
 ## What This Repo Contains
 
-This repository serves two audiences at the same time:
+- A static Next.js app deployed to GitHub Pages
+- The self-diagnostic questions, scoring logic, and dashboard recommendations
+- A Markdown playbook with prompt templates and practical guidance
+- Repository-analysis and Gherkin prompt templates
 
-- Product and framework owners who need a human-readable reference for the framework
-- Engineers who need the app, scoring logic, and prompts that power the live site
+There is no backend, database, authentication, admin panel, or team-session workflow in the current product. Results are calculated in the browser and stored only in `localStorage` on the user's device.
 
-## Deployment
+## Content Sources
 
-The site is a **static Next.js export** hosted on **GitHub Pages**. There is no backend, database, or authentication.
-
-- Assessment results are calculated in the browser and stored in `localStorage`. They persist across page reloads but are local to the user's browser and device.
-- Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/deploy.yml`), which builds the static site and deploys it to GitHub Pages automatically.
-- To restore the full server-backed version (auth, Prisma, team sessions), see the `v1-with-backend` git tag.
-
-## Read This First
-
-| Document | Purpose |
-|---|---|
-| [FRAMEWORK.md](FRAMEWORK.md) | Full stakeholder-facing framework reference: philosophy, score scale, pillars, questions, and recommendations |
-| [PRODUCT.md](PRODUCT.md) | Product behavior, scoring model, routes, and repository analysis workflow |
-| [TECHNICAL.md](TECHNICAL.md) | Engineering setup, architecture, persistence, and deployment |
-| [AGENTS.md](AGENTS.md) | Contributor and coding-agent rules for this repository |
-
-## Source of Truth
+The runnable tool uses repo-local content today:
 
 | File | Purpose |
 |---|---|
-| [`src/data/assessmentTemplate.ts`](src/data/assessmentTemplate.ts) | Machine-readable framework data used by the live product |
-| [`FRAMEWORK.md`](FRAMEWORK.md) | Human-readable reference aligned to the assessment template |
+| [src/data/assessmentTemplate.ts](src/data/assessmentTemplate.ts) | Questions, scoring hints, and dashboard recommendations |
+| [content/playbook.md](content/playbook.md) | Playbook guidance and prompt templates rendered at `/playbook` |
+| [prompts/repo-analysis.md](prompts/repo-analysis.md) | Prompt for AI-assisted repository analysis |
+| [prompts/gherkin.md](prompts/gherkin.md) | Prompt for acceptance-criteria drafting |
 
-If you need to change questions, scoring rubrics, or recommendations:
+Confluence can remain the broader knowledge hub for the CoE. Until API access is available, keep useful Confluence links in the playbook or recommendation text rather than trying to read Confluence directly from the app.
 
-1. Update `src/data/assessmentTemplate.ts`
-2. Update `FRAMEWORK.md`
-3. Run the relevant validation steps before merging
+## Documentation
 
-## Prompt Templates
+| Document | Purpose |
+|---|---|
+| [PRODUCT.md](PRODUCT.md) | Current product scope and user experience |
+| [TECHNICAL.md](TECHNICAL.md) | Static architecture, local workflow, and deployment |
+| [FRAMEWORK.md](FRAMEWORK.md) | Human-readable assessment reference generated from the template |
+| [AGENTS.md](AGENTS.md) | Contributor and coding-agent rules |
 
-- [prompts/gherkin.md](prompts/gherkin.md)
-- [prompts/repo-analysis.md](prompts/repo-analysis.md)
+## Common Changes
+
+If you change questions, scoring hints, or recommendations:
+
+1. Update [src/data/assessmentTemplate.ts](src/data/assessmentTemplate.ts)
+2. Run `npm run sync:framework`
+3. Update [content/playbook.md](content/playbook.md) when the recommendation needs supporting guidance or a prompt template
+4. Run `npm run lint`, `npm test`, and `npm run build`

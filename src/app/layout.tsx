@@ -1,22 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-heading",
-  subsets: ["latin"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  weight: ["400", "500"],
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Wizeline Best Practices Framework Pulse",
-  description: "Internal POC to assess engineering best practices and improvement opportunities.",
+  title: "Wizeline Best Practices Pulse",
+  description: "Static self-diagnostic for engineering habits and practical improvement prompts.",
 };
 
 export default function RootLayout({
@@ -25,7 +13,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${ibmPlexMono.variable}`}>
+    <html
+      lang="en"
+      style={{
+        "--font-heading": 'Avenir Next, "Helvetica Neue", Helvetica, sans-serif',
+        "--font-mono": '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+      } as React.CSSProperties}
+    >
       <body>
         <div className="shell">
           <nav className="nav-bar">

@@ -1,18 +1,16 @@
-# SWE Best Practices Framework — Reference Guide
+# SWE Best Practices Self-Diagnostic - Reference Guide
 
-> **This repository is the canonical source of truth** for Wizeline's Software Engineering Best Practices Framework.  
-> All changes to questions, scoring rubrics, pillar definitions, or recommendations must be committed here to take effect across all evaluation tooling.
->
-> **Live platform:** https://swe-best-practices.vercel.app/  
-> **Assessment source file:** [`src/data/assessmentTemplate.ts`](src/data/assessmentTemplate.ts)  
-> **Owners:** Daniel Martinez · Leslye Patiño Ortega  
-> **CoE:** Software Engineering — Excellence & Best Practices
+This document is the human-readable reference for the self-diagnostic questions, scoring scale, and recommendations used by the static app.
+
+**Live site:** https://wizeline.github.io/wz-int-swe-best-practices/  
+**Assessment source file:** [src/data/assessmentTemplate.ts](src/data/assessmentTemplate.ts)  
+**CoE:** Software Engineering - Excellence & Best Practices
 
 ## How To Read This Document
 
-- Use this file when you need the human-readable framework definition
-- Use `src/data/assessmentTemplate.ts` when you need the machine-readable source used by the product
-- Keep both in sync whenever questions, scoring rules, or recommendations change
+- Use this file when you need a readable assessment reference.
+- Use [src/data/assessmentTemplate.ts](src/data/assessmentTemplate.ts) when you need the machine-readable source used by the product.
+- Run `npm run sync:framework` after changing questions, scoring hints, or recommendations.
 
 ## Core Philosophy
 
@@ -22,7 +20,7 @@
 
 ## Score State Scale
 
-The framework measures an individual's or team's active operational state. Scores reflect *actual daily habits*, not aspirations or team-level norms.
+The self-diagnostic measures an individual's current engineering habits. Scores reflect actual daily behavior, not aspirations or team-level norms.
 
 | Score State | Raw Score Rule | Definition |
 |---|---|---|
@@ -35,44 +33,22 @@ The framework measures an individual's or team's active operational state. Score
 **Raw score range:** dynamic (`0..questionCount × 4`) with runtime band resolution in `resolveScoreBands(maxScore)`  
 **Floor rule:** `Optimized` also requires every pillar average to be at least `2.5`; `Strategic` requires every pillar average to be at least `3.0`.
 
-## The Engineering Excellence Cycle
+## Improvement Loop
 
-The framework operates as a **continuous quarterly cycle** designed to elevate engineering delivery, optimize workflows, and reinforce performance evaluations.
+The current tool supports a lightweight personal improvement loop:
 
-### Phase 1 — Diagnosis (Assessment)
+1. Complete the self-diagnostic.
+2. Review your score and answers.
+3. Pick one or two recommendations for your next real task.
+4. Use the suggested prompt to create a reviewable artifact.
+5. Verify the artifact with tests, code evidence, a reviewer, or a Confluence/team standard.
 
-**Objective:** Capture an honest, data-driven snapshot of an engineer's or team's current development behaviors across the 5 core SDLC pillars.
-
-**Execution:** Each quarter, engineers complete the assessment at [swe-best-practices.vercel.app](https://swe-best-practices.vercel.app/). The platform processes questions from this repository's source code in real-time.
-
-**Output:** A localized scorecard establishing the engineer's current technical delivery state (Foundational / Disciplined / Optimized / Strategic).
-
-### Phase 2 — Action Items (Tactical Roadmap)
-
-**Objective:** Translate the diagnosis report into a personalized, high-value Growth Plan integrated directly into the active development backlog.
-
-**Execution:** Guided by the score report, engineers identify gaps and select **two high-impact improvement actions** for the current sprint cycle (e.g., transitioning documentation to Docs-as-Code, or enforcing Spec-Driven Development).
-
-**Strategic Accelerator Mapping:** The action plan must document how AI assistants, automation tools, or elite manual strategies will be deployed to optimize target workflows without introducing risk or debt.
-
-### Phase 3 — Enablement (Enablement Hub)
-
-**Objective:** Execute the growth plan through hands-on learning, centralized resource deployment, and peer-led Workflow Translation.
-
-**Execution:** The SWE CoE team provides materials and hosts active workshop series tailored to action items (e.g., "Advanced Prompting for Architecture" or "Manual Threat Modeling"). AI Champions and practice mentors act as on-the-ground guides sharing real-world optimization evidence.
-
-### Phase 4 — Audit (Validation)
-
-**Objective:** Systematically verify implementation of agreed improvements and validate concrete engineering evidence before closing the cycle.
-
-**Execution:** A designated practice manager, technical leader, or performance lead conducts an objective review by inspecting live project repositories — bypassing subjective self-reporting.
-
-**Verification Criteria:** Randomized sampling of Pull Requests, Technical Specifications, and Architectural Decision Records (ADRs) to confirm documented evidence matches committed framework benchmarks. Successful validation directly reinforces annual performance reviews.
+Confluence can hold richer CoE guidance, examples, and workshop material. This static app keeps the small actionable subset that users need during assessment and follow-up.
 
 ---
 
 <!-- AUTO-GENERATED:ASSESSMENT_FRAMEWORK:START -->
-## Assessment Framework — 5 Pillars
+## Self-Diagnostic Assessment — 5 Pillars
 
 The assessment covers **16 questions across 5 pillars**, each weighted equally at 20% of the total score.
 
@@ -82,40 +58,40 @@ The assessment covers **16 questions across 5 pillars**, each weighted equally a
 
 ### Pillar 1 – Ideation & Requirements
 
-*How clearly you define and understand the work before writing a single line of code.*
+*How you turn a request into clear work before you start coding.*
 
 #### Questions
 
-**Q1 · How do you document requirements before starting a task?**
+**Q1 · When you get a new ticket or Slack request, how do you clarify what needs to be built?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I start coding from a verbal request or Slack message without writing anything down. |
-| 2 – Disciplined | I write a brief summary in the ticket but skip explicit acceptance criteria. |
-| 3 – Optimized | I write a formal spec with clear Acceptance Criteria (Given/When/Then) before every task, not just large ones. |
-| 4 – Strategic | I validate the spec with the requester before coding, resolve all ambiguous criteria until they are testable, and flag scope risks early. |
+| 1 – Foundational | I usually start coding from the message or ticket as-is. |
+| 2 – Disciplined | I add a short note or ask a quick question, but the success criteria are still loose. |
+| 3 – Optimized | I write clear acceptance criteria before coding, even for normal-sized tasks. |
+| 4 – Strategic | I confirm the criteria with the requester, call out open questions, and make sure the work is testable before I start. |
 
 ---
 
-**Q2 · How do you check what your code will break (impact analysis)?**
+**Q2 · Before changing code, how do you check what else might be affected?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I start coding and deal with breakage when it appears in tests or review. |
-| 2 – Disciplined | I search the repo for likely affected files before I start, but the analysis is informal and undocumented. |
-| 3 – Optimized | Before coding, I map all dependencies my change could affect and document that analysis in the ticket or PR. |
-| 4 – Strategic | I share the impact map with owners of affected services, confirm no conflicts, and update it if scope changes mid-task. |
+| 1 – Foundational | I mostly find out when tests fail, QA reports something, or a reviewer points it out. |
+| 2 – Disciplined | I search the repo for related files, but I do not write down what I found. |
+| 3 – Optimized | I note the likely impacted files, flows, or services in the ticket or PR before coding. |
+| 4 – Strategic | I also check with owners of risky areas and update the impact note when the scope changes. |
 
 ---
 
-**Q3 · How do you track your delivery speed and quality?**
+**Q3 · After finishing work, how do you learn from how the ticket went?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I don't monitor my own delivery speed or PR quality; I focus on finishing tasks. |
-| 2 – Disciplined | I check if I hit the sprint deadline but don't track rework, review cycles, or bug rates. |
-| 3 – Optimized | I regularly note my cycle times and how often PRs come back with significant comments, and use that to adjust estimates. |
-| 4 – Strategic | Each sprint I identify one specific bottleneck from my data and apply a concrete change to address it. |
+| 1 – Foundational | I move to the next task and do not look back unless something breaks. |
+| 2 – Disciplined | I notice when a ticket took longer than expected, but I do not track why. |
+| 3 – Optimized | I look at review comments, rework, and time spent so I can estimate or plan better next time. |
+| 4 – Strategic | I pick one recurring bottleneck each sprint and try a specific change to improve it. |
 
 ---
 
@@ -123,49 +99,49 @@ The assessment covers **16 questions across 5 pillars**, each weighted equally a
 
 | Band | Action |
 |---|---|
-| **Foundational** | **Start writing structured ticket descriptions.** Before coding, add a 'Why / What / Acceptance Criteria' block to your ticket. Example: Add a bulleted list of 3 things that must be true for this ticket to be considered 'Done'. |
-| **Disciplined** | **Adopt Gherkin-style Acceptance Criteria.** Write scenarios for each requirement. Example: Write 'Given a logged-in user, When they click buy, Then the cart clears'. Also, list all files you expect to change before coding. |
-| **Optimized** | **Leverage AI for requirements normalization.** Use a prompt-based agent to turn raw client inputs into a structured spec. Example: Paste a Slack thread from a PM into an LLM and ask it to generate Jira Acceptance Criteria. |
-| **Strategic** | **Coach your team on requirements rigor.** Spread structured requirements practices beyond your own work. Example: Run a 30-minute workshop showing teammates how to turn a vague Slack message into a Gherkin spec, and create a shared ticket template in Jira or Linear that the whole team can reuse. |
+| **Foundational** | **Turn rough requests into clear tickets.** Do: Add a short Why / What / Done block before coding. Prompt: 'Act as a senior product engineer. Convert this request into a concise ticket. Use only the provided context, mark assumptions, list open questions, and write testable acceptance criteria.' Output: ticket draft. Check: every Done item can be observed in the app, API, logs, or tests. |
+| **Disciplined** | **Make acceptance criteria testable.** Do: Write one scenario per behavior and note the likely impacted files. Prompt: 'Act as a senior QA-minded engineer. Convert this ticket into Given/When/Then scenarios. Do not invent requirements; put missing details under Open Questions. Also list files or flows likely affected.' Output: scenarios plus impact note. Check: each scenario maps to a planned automated or manual check. |
+| **Optimized** | **Use AI to clean up messy input.** Do: Use an assistant to turn Slack threads, notes, or vague tickets into a reviewed spec. Prompt: 'Act as a senior engineer preparing implementation. Summarize the request, separate facts from assumptions, write acceptance criteria, non-goals, dependencies, risks, and questions. Do not fill gaps silently.' Output: reviewed spec. Check: confirm assumptions with the requester before implementation. |
+| **Strategic** | **Share a better ticket habit.** Do: Turn your ticket cleanup process into a team template. Prompt: 'Act as an engineering lead. Create a lightweight ticket template for Jira or Linear with sections for context, acceptance criteria, assumptions, risks, and verification. Include guidance for when to ask follow-up questions.' Output: shared template or Confluence note. Check: at least one teammate uses it and gives feedback. |
 
 ---
 
 ### Pillar 2 – Design & Architecture
 
-*How you plan your technical solutions, reuse existing code, and handle security.*
+*How you choose an approach before changing code.*
 
 #### Questions
 
-**Q4 · How do you find reusable components or patterns?**
+**Q4 · Before building something, how do you look for existing code or patterns to reuse?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I write solutions from scratch without checking if a similar one exists. |
-| 2 – Disciplined | I do a manual repo search for similar code but don't consult architecture docs or ADRs. |
-| 3 – Optimized | I consult ADRs, shared libraries, or architecture standards before designing my solution and reference them in my approach. |
-| 4 – Strategic | When I reuse a pattern, I document or improve it if I find gaps and share my findings with the team. |
+| 1 – Foundational | I usually build the solution from scratch. |
+| 2 – Disciplined | I search the repo for similar files or components, but the check is quick and informal. |
+| 3 – Optimized | I check existing code, docs, ADRs, or shared patterns and mention what I reused in my plan or PR. |
+| 4 – Strategic | When I find a useful or confusing pattern, I improve the docs or share it so others can reuse it too. |
 
 ---
 
-**Q5 · Do you create a technical plan before coding?**
+**Q5 · For non-trivial work, how do you explain your technical approach before coding?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I start coding directly from the ticket without writing down my approach. |
-| 2 – Disciplined | I sketch the approach informally but don't produce a shareable, reviewable artifact. |
-| 3 – Optimized | I write a Design Doc with at least one diagram and share it for review before coding starts, for any non-trivial change. |
-| 4 – Strategic | I get explicit feedback from a senior engineer or architect, incorporate their input, and update the doc if the design evolves during implementation. |
+| 1 – Foundational | I keep the plan in my head and start coding. |
+| 2 – Disciplined | I write a few notes for myself, but they are not easy for others to review. |
+| 3 – Optimized | I write a short design note or diagram and share it before implementing risky or cross-cutting changes. |
+| 4 – Strategic | I get feedback from the right people, update the note when the design changes, and link it from the ticket or PR. |
 
 ---
 
-**Q6 · When do you evaluate security risks?**
+**Q6 · When your change touches user data, auth, payments, or external input, how do you think about security?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I don't do explicit security analysis; I trust the platform or framework to handle it. |
-| 2 – Disciplined | I apply general security awareness while coding (sanitizing inputs, not hardcoding secrets) but without a dedicated review step. |
-| 3 – Optimized | Before coding, I trace data flows and identify at least one threat vector using a lightweight threat model, for every feature involving sensitive data or external inputs. |
-| 4 – Strategic | I have my threat model reviewed by a peer before coding, document the mitigations I will apply, and verify them during code review. |
+| 1 – Foundational | I rely on the framework or existing code to handle it. |
+| 2 – Disciplined | I avoid obvious mistakes like hardcoded secrets, but I do not do a focused security pass. |
+| 3 – Optimized | I trace the data flow, name at least one realistic risk, and plan the mitigation before coding. |
+| 4 – Strategic | I ask for review on the risk and verify the mitigation in code review or tests. |
 
 ---
 
@@ -173,71 +149,71 @@ The assessment covers **16 questions across 5 pillars**, each weighted equally a
 
 | Band | Action |
 |---|---|
-| **Foundational** | **Make design visible before coding.** Sketch a simple diagram and search the repo for existing patterns. Example: Take a photo of a whiteboard drawing and attach it to the PR so reviewers understand your intent. |
-| **Disciplined** | **Document with ADRs and Threat Models.** Publish a short Design Doc. Example: Use Mermaid.js to create a sequence diagram showing how the frontend, API, and database talk to each other, and document one security risk. |
-| **Optimized** | **Adopt AI-assisted design validation.** Query AI for reusable components and design risks. Example: Feed your proposed database schema into an AI agent to find missing indexes, or feed your API sequence diagram to detect missing authentication layers. |
-| **Strategic** | **Drive architectural standards across the team.** Turn your design practices into shared team conventions. Example: Write or update the team ADR template, add a mandatory threat-model section, and do at least one design-doc review per sprint as a recurring ritual. |
+| **Foundational** | **Look before building from scratch.** Do: Search for similar code and write down what you found. Prompt: 'Act as a senior engineer joining this repo. Given this task and file list, identify existing modules, patterns, or docs I should inspect before designing the solution. Mark uncertain guesses.' Output: reuse checklist. Check: your ticket or PR names at least one reused or intentionally rejected pattern. |
+| **Disciplined** | **Write a small design note.** Do: Write a short design note before coding risky work. Prompt: 'Act as a senior engineer reviewing a design. Draft a one-page ADR with context, decision, alternatives, tradeoffs, data flow, security concern, rollout, and open questions. Do not assume missing facts.' Output: ADR or design note. Check: a reviewer can understand the approach before reading the diff. |
+| **Optimized** | **Use AI to challenge the design.** Do: Ask an assistant to find holes before the PR exists. Prompt: 'Act as a skeptical staff engineer. Review this design for unclear boundaries, security risks, data integrity gaps, failure modes, simpler alternatives, and missing tests. Separate facts, assumptions, and questions.' Output: design review checklist. Check: every accepted risk has a mitigation, owner, or explicit non-goal. |
+| **Strategic** | **Turn good design notes into a team habit.** Do: Share a template that makes design review easier. Prompt: 'Act as an engineering lead. Create a practical ADR template for our team with sections for context, options, decision, risks, security, observability, tests, rollout, and human review of AI suggestions.' Output: team ADR template. Check: new design notes use the template consistently. |
 
 ---
 
 ### Pillar 3 – Development Hygiene
 
-*How clean, reviewable, and well-documented your actual code changes are, how reliably you deliver them, and how consistently you protect data integrity.*
+*How you keep PRs reviewable, verified, and easy to maintain.*
 
 #### Questions
 
-**Q7 · How do you manage the size and scope of your Pull Requests (PRs)?**
+**Q7 · When a task grows, how do you keep the PR easy to review?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | My PRs mix multiple concerns because I commit everything as I go. |
-| 2 – Disciplined | I keep the PR focused on the ticket but don't actively split it when it grows large. |
-| 3 – Optimized | I plan a PR sequence before coding: refactors in one PR, behavior changes in another, each with a single stated purpose. |
-| 4 – Strategic | After each PR cycle, I review the feedback and use it to improve how I split my next work. |
+| 1 – Foundational | I usually keep everything in one PR once I have started. |
+| 2 – Disciplined | I try to stay focused, but refactors, fixes, and feature work often end up together. |
+| 3 – Optimized | I split refactors, behavior changes, tests, and docs when that makes review easier. |
+| 4 – Strategic | I plan the PR sequence early and use reviewer feedback to improve how I split future work. |
 
 ---
 
-**Q8 · How do you ensure your code does exactly what the ticket asked?**
+**Q8 · Before opening or merging a PR, how do you check that it actually covers the ticket?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I implement what seems right and rely on review comments to catch spec misalignments. |
-| 2 – Disciplined | I manually test the main flow before opening the PR but don't trace each Acceptance Criterion explicitly. |
-| 3 – Optimized | Before merging, I trace each Acceptance Criterion to a specific piece of code or test to confirm nothing was missed. |
-| 4 – Strategic | I include a traceability note in my PR description mapping each AC to the code or test that covers it, so reviewers can verify coverage without hunting through the diff. |
+| 1 – Foundational | I trust my implementation and expect review to catch mismatches. |
+| 2 – Disciplined | I manually test the main flow, but I do not check each acceptance criterion one by one. |
+| 3 – Optimized | I map each acceptance criterion to code, tests, or manual verification before merging. |
+| 4 – Strategic | I put that mapping in the PR so reviewers can verify coverage quickly. |
 
 ---
 
-**Q9 · When do you update the documentation?**
+**Q9 · When your change affects how someone uses, runs, or supports the system, when do you update docs?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I rarely update documentation; I leave it for later, which often means never. |
-| 2 – Disciplined | I update docs after the code is merged when I remember, but it's not a consistent habit. |
-| 3 – Optimized | I update documentation in the same PR as the code change, every time, not as an afterthought. |
-| 4 – Strategic | After merging, I re-read the docs as if I were a new engineer, fix any gaps I find, and confirm they reflect the actual current behavior. |
+| 1 – Foundational | I usually leave docs for later. |
+| 2 – Disciplined | I update docs when someone asks or when I remember after the code is done. |
+| 3 – Optimized | I update docs in the same PR as the code change. |
+| 4 – Strategic | I re-read the docs from a new engineer's point of view and fix gaps after the change lands. |
 
 ---
 
-**Q15 · Is your CI/CD pipeline ensuring reliable and consistent delivery?**
+**Q15 · How do you treat CI when your PR is ready?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I deploy manually or push to shared branches without relying on a pipeline. |
-| 2 – Disciplined | My PRs go through a basic CI pipeline but I don't verify all gates pass before merging; I treat CI as optional. |
-| 3 – Optimized | Every change I merge passes all automated quality gates (tests, linting, security checks) in CI, and I follow a deployment process with documented rollback steps. |
-| 4 – Strategic | When a gate fails, I investigate root cause rather than just re-running. I actively improve the pipeline when I find gaps. |
+| 1 – Foundational | I rely mostly on local checks or manual deploy habits. |
+| 2 – Disciplined | I wait for basic CI, but I sometimes rerun or ignore failures without digging deeply. |
+| 3 – Optimized | I make sure required checks pass and understand what they cover before merging. |
+| 4 – Strategic | When CI fails, I look for root cause and improve the pipeline when I find a real gap. |
 
 ---
 
-**Q16 · Are you ensuring data integrity across your system?**
+**Q16 · When your code accepts or saves data, how do you prevent bad data from getting through?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I assume data arrives valid; I don't add explicit validation or DB constraints. |
-| 2 – Disciplined | I validate inputs at the entry point but skip deeper constraints like DB-level checks or transactions for related writes. |
-| 3 – Optimized | I enforce integrity at every boundary I own: input validation, DB constraints, and transactional logic for multi-step operations, in every feature I build. |
-| 4 – Strategic | I write integrity tests that verify my data guarantees in CI and document what my service promises and what it assumes from upstream. |
+| 1 – Foundational | I mostly assume the caller sends valid data. |
+| 2 – Disciplined | I validate obvious inputs, but deeper constraints or multi-step consistency are inconsistent. |
+| 3 – Optimized | I validate inputs, enforce constraints where data is stored, and use transactions or equivalent safeguards when needed. |
+| 4 – Strategic | I also test and document the data guarantees my code provides and what it expects from callers. |
 
 ---
 
@@ -245,49 +221,49 @@ The assessment covers **16 questions across 5 pillars**, each weighted equally a
 
 | Band | Action |
 |---|---|
-| **Foundational** | **Focus PRs, set up CI, and add input validation.** Scope each PR to a single concern, add a basic CI workflow that runs tests on every PR, and validate inputs at entry points. Example: Add a GitHub Actions step that runs your test suite before a PR can be merged, and write one validation check for an endpoint you own. |
-| **Disciplined** | **Enforce single-responsibility PRs, quality gates, and data constraints.** Split refactors from feature PRs, require all CI gates to pass before merging, and enforce DB-level constraints and transactions for related writes. Example: Make PR #1 the refactor and PR #2 the feature; block merges when lint or tests fail; wrap multi-step DB writes in a transaction. |
-| **Optimized** | **Automate traceability, pipeline stages, and data observability.** Use AI to plan PR splits and spec-to-code traceability, contribute pipeline improvements (parallelization, environment promotion), and add monitoring for data anomalies. Example: Use an AI tool to generate a PR description from your diff, add a staging promotion gate to CI, and set an alert for unexpected null rates in a key column. |
-| **Strategic** | **Set team-wide hygiene standards and automate enforcement.** Make your personal hygiene habits the team default. Example: Propose and merge a PR template that requires a traceability section, add a lint rule that blocks large single-commit PRs, and document rollback procedures in the team runbook. |
+| **Foundational** | **Make the next PR smaller and safer.** Do: Keep the next PR to one concern and add one guardrail. Prompt: 'Act as a senior engineer. Split this task into the smallest reviewable PRs. For each PR, list goal, files, tests, docs, risks, and what is out of scope. Do not add unrelated cleanup.' Output: PR plan. Check: the PR description clearly says what is included and excluded. |
+| **Disciplined** | **Map the ticket to the PR.** Do: Show how the implementation covers the ticket. Prompt: 'Act as a careful reviewer. Compare this ticket and PR plan. Create a traceability table with acceptance criteria, code areas, tests, docs, and missing evidence. Mark anything uncertain.' Output: traceability table. Check: each acceptance criterion has evidence or an explicit follow-up. |
+| **Optimized** | **Use AI for PR readiness checks.** Do: Ask an assistant to review readiness before humans spend time on the PR. Prompt: 'Act as a strict PR reviewer. Given this diff, ticket, and test output, find scope creep, missing acceptance criteria, weak tests, docs gaps, data integrity risks, and unclear rollback notes. Separate blockers from suggestions.' Output: PR readiness checklist. Check: fix blockers before requesting review. |
+| **Strategic** | **Create a reusable PR checklist.** Do: Turn your PR habits into a team checklist. Prompt: 'Act as an engineering lead. Create a practical PR template with sections for summary, acceptance criteria coverage, tests run, docs changed, risks, rollback, and AI-assisted review notes. Keep it lightweight.' Output: PR template. Check: the team uses it for at least one feature cycle. |
 
 ---
 
 ### Pillar 4 – Quality Engineering
 
-*How thoroughly you test your code and protect against future bugs.*
+*How you catch bugs before users or teammates do.*
 
 #### Questions
 
-**Q10 · How do you test for hidden bugs?**
+**Q10 · When you write tests, how much do you cover beyond the happy path?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I don't write automated tests; I validate manually or rely on others to find bugs. |
-| 2 – Disciplined | I write tests for the main success flow but don't systematically cover failure cases or edge inputs. |
-| 3 – Optimized | For every meaningful piece of logic I write, I cover at least one edge case and one failure mode, not just the happy path. |
-| 4 – Strategic | Before writing tests, I list the failure modes most likely to cause user impact, prioritize them, and cover the highest-risk ones first. I revisit this list when production issues occur. |
+| 1 – Foundational | I mostly rely on manual checks or the main demo flow. |
+| 2 – Disciplined | I test the main success path, but edge cases and failures are hit or miss. |
+| 3 – Optimized | I usually cover at least one edge case and one failure path for meaningful logic. |
+| 4 – Strategic | I list the highest-risk failure modes first and update my test approach when bugs or incidents teach us something. |
 
 ---
 
-**Q11 · How do you verify your logic before merging?**
+**Q11 · Before asking for review, how carefully do you review your own diff?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I open the PR when CI is green and count on reviewers to catch logic issues. |
-| 2 – Disciplined | I do a quick re-read of my diff before tagging reviewers but it's not structured; I'm mainly looking for obvious mistakes. |
-| 3 – Optimized | I do a structured self-review before every PR: line by line through my diff, verifying each function against the acceptance criteria. |
-| 4 – Strategic | Before requesting review, I note the riskiest parts of the change in the PR description and what I verified, guiding reviewers to areas that need the most scrutiny. |
+| 1 – Foundational | I open the PR once it works and CI is green. |
+| 2 – Disciplined | I skim the diff for obvious mistakes before tagging reviewers. |
+| 3 – Optimized | I review the diff against the ticket, tests, and risky branches before requesting review. |
+| 4 – Strategic | I tell reviewers which parts are risky and what I already checked. |
 
 ---
 
-**Q12 · How do you handle broken legacy tests or technical debt?**
+**Q12 · When you touch an area with flaky tests or old test debt, what do you do?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I skip or comment out failing tests that block progress and leave a note to fix later. |
-| 2 – Disciplined | I fix tests my changes directly broke but don't touch legacy debt I didn't cause. |
-| 3 – Optimized | When I work in a file, I also clean up or rewrite outdated or flaky tests I find there, even unrelated ones. |
-| 4 – Strategic | I proactively identify test debt in areas I work on, propose a cleanup plan, and execute it alongside feature work. I track coverage changes in areas I own over time. |
+| 1 – Foundational | I work around broken tests if they block the task. |
+| 2 – Disciplined | I fix tests my change directly broke, but I usually leave older issues alone. |
+| 3 – Optimized | I clean up outdated or flaky tests in the area I am already touching when the scope is reasonable. |
+| 4 – Strategic | I track recurring test debt, propose cleanup, and improve the area over time. |
 
 ---
 
@@ -295,38 +271,38 @@ The assessment covers **16 questions across 5 pillars**, each weighted equally a
 
 | Band | Action |
 |---|---|
-| **Foundational** | **Expand beyond happy-path tests.** Write tests for when things go wrong. Example: If you write a function that divides numbers, write one test for normal numbers, and a second test to see what happens if you divide by zero. |
-| **Disciplined** | **Introduce self-audits and test debt cleanup.** Review your own code first. Example: Review your own PR on GitHub before tagging a teammate. Also, commit to rewriting one bad legacy test in the file you are currently editing. |
-| **Optimized** | **Adopt AI-assisted QA agents.** Use AI to discover edge cases. Example: Provide your function to an AI and ask, 'Generate 5 unit tests that attempt to break this logic using weird or unexpected inputs.' |
-| **Strategic** | **Build a quality culture with shared ownership.** Elevate quality from a personal habit to a team standard. Example: Propose a coverage threshold enforced in CI, present a retrospective item on recurring bug patterns, and pair with a junior engineer on test strategy for one feature per sprint. |
+| **Foundational** | **Add one test that can fail for a real reason.** Do: Add one edge-case or failure-path test, not only the demo path. Prompt: 'Act as a senior test engineer. For this function or feature, list the happy path, likely edge cases, realistic failure modes, and the single highest-value test to add first. Do not invent product rules.' Output: focused test plan. Check: at least one negative or boundary case is automated. |
+| **Disciplined** | **Review your diff before others do.** Do: Self-review the risky parts before requesting review. Prompt: 'Act as a strict reviewer. Audit this diff against the ticket and tests. Identify logic gaps, weak assertions, flaky test risks, missing edge cases, and one small cleanup worth doing now. Separate blockers from nice-to-haves.' Output: self-review note. Check: the PR description names the riskiest area and what you checked. |
+| **Optimized** | **Use AI to find tests you missed.** Do: Use an assistant to expand your test thinking, then choose tests yourself. Prompt: 'Act as a QA strategist. Given this code, ticket, and known constraints, propose tests for invalid input, boundary values, partial failure, concurrency or repeated actions, and regression risk. Rank by user impact and mark assumptions.' Output: prioritized test list. Check: merged tests match real behavior, not invented rules. |
+| **Strategic** | **Turn bug patterns into shared checks.** Do: Convert repeated bugs into a checklist your team can use. Prompt: 'Act as an engineering lead. Analyze these recent bugs or review comments and create a lightweight quality checklist with examples, test patterns, CI guardrails, and when to apply each item.' Output: team quality checklist. Check: the checklist catches or prevents a recurring issue. |
 
 ---
 
 ### Pillar 5 – Operations & Maintenance
 
-*How easy it is to monitor, debug, and hand off the system you built.*
+*How easy it is for you or someone else to debug and support what you ship.*
 
 #### Questions
 
-**Q13 · How easy is it to debug your code in production?**
+**Q13 · After your feature ships, how easy is it to know whether it is working?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I don't add feature-specific logging; debugging relies on generic error traces. |
-| 2 – Disciplined | I add basic text logs at key steps but they're not structured or consistently queryable. |
-| 3 – Optimized | I write structured logs (e.g., JSON with userId, endpoint, errorCode) and set up at least one dashboard or alert before my feature goes to production. |
-| 4 – Strategic | After each deploy, I verify my alerts and dashboards reflect actual system behavior, update them as the feature evolves, and document first-response steps for each alert I own. |
+| 1 – Foundational | I rely on generic errors, user reports, or someone manually checking. |
+| 2 – Disciplined | I add basic logs, but they are not always searchable or tied to clear success/failure signals. |
+| 3 – Optimized | I add useful logs, metrics, dashboards, or alerts for the feature before release. |
+| 4 – Strategic | I verify the signals after deploy and document what to check first when something looks wrong. |
 
 ---
 
-**Q14 · How easily can another engineer take over your work?**
+**Q14 · If you are offline, how easily can another engineer understand or support your change?**
 
 | Score | Description |
 |---|---|
-| 1 – Foundational | I finish tasks without leaving context beyond the code; handoff knowledge lives only in my head. |
-| 2 – Disciplined | I describe the implementation in the PR description, but that context is buried after merge. |
-| 3 – Optimized | I write a KT document (architecture notes, runbook, or README section) and link it from the repo so any engineer can find it independently. |
-| 4 – Strategic | I keep my KT documentation current as the feature evolves, share it proactively with teammates who will support it, and review it with them to close any gaps. |
+| 1 – Foundational | Most of the context is in my head or scattered in chats. |
+| 2 – Disciplined | The PR explains the change, but the context is hard to find after merge. |
+| 3 – Optimized | I leave a README, runbook, Confluence note, or architecture note linked from the repo or ticket. |
+| 4 – Strategic | I keep the handoff material current and review it with people who may support the feature. |
 
 ---
 
@@ -334,10 +310,10 @@ The assessment covers **16 questions across 5 pillars**, each weighted equally a
 
 | Band | Action |
 |---|---|
-| **Foundational** | **Replace text logs with structured logging.** Use logs that are easy to search. Example: Instead of console.log('failed to fetch user'), use logger.error('user_fetch_failed', { userId: id, endpoint: url }). |
-| **Disciplined** | **Define Dashboards and a KT guide.** Make your feature observable. Example: Create a Datadog/Grafana dashboard tracking the success rate of your new API endpoint, and add a 'How to Test' section to the README. |
-| **Optimized** | **Make observability AI-ready.** Automate documentation. Example: Hook up a tool that automatically publishes your successful PRs and their architectural changes into your company's Confluence or Notion workspace. |
-| **Strategic** | **Establish team-wide observability and knowledge standards.** Make observability and knowledge transfer a team expectation, not a personal habit. Example: Propose a runbook template for new features, review the on-call alert backlog as a team quarterly, and mentor one teammate on structured logging in their next feature. |
+| **Foundational** | **Add signals someone can search.** Do: Add at least one searchable signal for the feature. Prompt: 'Act as an on-call engineer. For this feature, list the first three questions support would ask if it breaks. Propose logs, metrics, or alerts that answer those questions. Include event names and fields; mark assumptions.' Output: logging and metrics note. Check: each signal can be found in the real logging or monitoring tool. |
+| **Disciplined** | **Leave a handoff note.** Do: Write the minimum context another engineer needs. Prompt: 'Act as a senior engineer writing a handoff note. Draft sections for what changed, how to verify it, signals to watch, likely failure symptoms, first debugging steps, rollback or mitigation, owner, and links. Do not invent links or dashboards.' Output: README, runbook, or Confluence note. Check: another engineer can find it without asking you. |
+| **Optimized** | **Use AI to draft support docs.** Do: Use an assistant to turn PR context into support-ready docs. Prompt: 'Act as an on-call-ready engineer. From this PR summary, diff, and known monitoring links, draft a runbook with signals, common failures, triage steps, mitigation, rollback, and ownership. Mark every claim that needs verification.' Output: reviewed runbook. Check: all links, dashboards, commands, and rollback steps are real. |
+| **Strategic** | **Create a team handoff standard.** Do: Make handoff notes a normal part of delivery. Prompt: 'Act as an engineering lead. Create a lightweight runbook template for new features with required signals, first-response steps, rollback, ownership, links, and rules for reviewing AI-generated drafts.' Output: shared runbook template in Confluence or the repo. Check: every new feature links to a support note. |
 
 ---
 <!-- AUTO-GENERATED:ASSESSMENT_FRAMEWORK:END -->

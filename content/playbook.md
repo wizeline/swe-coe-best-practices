@@ -1,6 +1,63 @@
-# Best Practices Execution Playbook
+# Best Practices Self-Diagnostic Playbook
 
-This playbook turns assessment recommendations into practical team habits. Use it when you want concrete next steps for any of the five engineering practice pillars. Content is organized by pillar so the dashboard can link recommendations to the right section. Prefer durable engineering practices over tool-specific tricks.
+This playbook turns self-diagnostic recommendations into practical next steps. Use it when you want a prompt, artifact, or review checklist for one of the five engineering practice pillars. Content is organized by pillar so the dashboard can link recommendations to the right section.
+
+The tool is static and does not connect to Confluence directly. Keep Confluence as the broader knowledge hub for team standards, examples, and workshop material; use this playbook as the lightweight, repo-versioned guide that can be rendered in the self-diagnostic.
+
+When using an AI assistant, treat every prompt output as a draft. The useful pattern is: ask the agent to structure the work, produce a concrete artifact, then verify the artifact against real code, tests, owners, and project constraints.
+
+## Prompting Pattern For Every Recommendation
+
+Use this pattern when adapting any playbook prompt to your work.
+
+### Turn advice into a verified artifact
+
+Start with the recommendation, ask for a concrete output, and keep responsibility with the engineer.
+
+#### Do this
+
+Ask the assistant for one artifact you can attach to the ticket, PR, repo, or Confluence page: acceptance criteria, ADR, PR plan, test plan, traceability table, or runbook.
+
+#### Why this works
+
+Agent outputs become useful when they leave reviewable evidence behind. A prompt that only gives advice is easy to ignore; a prompt that produces an artifact can be checked, improved, and reused.
+
+#### How to
+
+Use this base prompt and replace the bracketed sections with your real context.
+
+**Prompt template: Verified engineering artifact**
+
+```text
+Act as a senior engineer helping me prepare a reviewable artifact.
+
+Context:
+- Task: [what I am trying to build or change]
+- Repo area: [files, modules, service, page, or workflow involved]
+- Constraints: [product, security, platform, timeline, compatibility]
+- Evidence I have: [ticket, Slack thread, code, PR diff, logs, screenshots, docs]
+
+Rules:
+- Use only the context I provide.
+- Do not invent requirements, links, dashboards, APIs, or business rules.
+- Mark assumptions clearly.
+- Put missing information under Open questions.
+- Keep the scope small enough for one engineer to act on.
+
+Create this artifact:
+- Type: [acceptance criteria | ADR | PR plan | test plan | traceability table | runbook]
+- Audience: [reviewer | QA | on-call engineer | future maintainer | requester]
+
+Output format:
+1. Summary
+2. Artifact
+3. Assumptions
+4. Risks
+5. Open questions
+6. Human verification checklist
+
+End with the exact things I must verify before I trust or share this output.
+```
 
 ## Pillar 1 - Ideation & Requirements
 
@@ -29,22 +86,32 @@ Project reference: `prompts/gherkin.md`
 **Prompt template: Structured ticket**
 
 ```text
-Convert the request below into an implementation-ready ticket.
+Act as a senior product engineer turning a rough request into a clear ticket.
 
-Request: "Add a rate limit to the public login endpoint so the same IP
-          cannot attempt more than 5 logins per minute."
+Request:
+"""
+[Paste the Slack message, Jira note, client ask, or verbal summary]
+"""
 
-1. Why: [what problem does this solve and who is harmed without it?]
-2. What: [what changes at a high level? e.g. new middleware, config flag, response header]
-3. Acceptance criteria:
-   Given [precondition]
-   When  [action]
-   Then  [expected result]
-   (add one scenario per distinct behavior)
-4. Open questions: [e.g. Should we return 429 or silently delay? Where is the counter stored?]
-5. Impact: [which services, endpoints, or teams need to know?]
+Known context:
+- Product area: [page, workflow, API, integration, user role]
+- Constraints: [timeline, platform, security, compatibility, rollout]
+- Current behavior: [what happens today, if known]
 
-Replace the example request above with your own and fill every section.
+Rules:
+- Do not invent requirements.
+- Mark assumptions explicitly.
+- Put missing details under Open questions.
+- Acceptance criteria must be testable.
+
+Output exactly:
+1. Why
+2. What
+3. Acceptance criteria in Given/When/Then format
+4. Out of scope
+5. Risks
+6. Open questions
+7. Human verification checklist
 ```
 
 ## Pillar 2 - Design & Architecture
@@ -74,21 +141,35 @@ Good artifact contents: context, decision, alternatives considered, tradeoffs, r
 **Prompt template: Architecture decision record**
 
 ```text
-I need to decide how to store user sessions for a new authentication flow.
-The two main options are a Redis-backed session store and stateless JWTs.
-The app runs on multiple Node.js instances behind a load balancer.
-Security requirements: tokens must be revocable immediately on logout.
+Act as a senior engineer reviewing a proposed technical approach.
 
-Fill out the following ADR for this decision:
+Change I am planning:
+"""
+[Describe the feature, bug fix, migration, or refactor]
+"""
 
-Context:      [describe the situation that forces this decision]
-Decision:     [which option and why, in one sentence]
-Alternatives: [other options you considered and why you ruled each out]
-Tradeoffs:    [what you gain and what you give up]
-Security:     [the main risk and how you will mitigate it]
-Rollout:      [migration steps, feature flags, or phased delivery if needed]
+Current context:
+- Repo area: [files/modules/services/pages]
+- Existing pattern I found: [link, file, ADR, or "unknown"]
+- Constraints: [security, performance, compatibility, deployment, static/runtime limits]
+- Options considered: [option A, option B, option C]
 
-Replace the session-store example with your own decision and fill every field.
+Rules:
+- Separate facts from assumptions.
+- Do not claim a pattern exists unless I provided evidence.
+- Include at least one rejected alternative.
+- Include one security or data-risk consideration when relevant.
+
+Output exactly:
+1. Context
+2. Decision
+3. Alternatives considered
+4. Tradeoffs
+5. Risks and mitigations
+6. Tests and validation
+7. Rollout or rollback notes
+8. Open questions
+9. Human review checklist
 ```
 
 ## Pillar 3 - Development Hygiene
@@ -116,17 +197,35 @@ Defer unrelated fixes to follow-up tickets rather than bundling them in. Each PR
 **Prompt template: PR sequence plan**
 
 ```text
-I need to add Google OAuth login to a Next.js app that currently uses
-email/password auth. The work touches the auth middleware, the login
-page UI, the session cookie logic, and the user profile endpoint.
+Act as a senior engineer helping me split work into reviewable PRs.
 
-Break this into the smallest reviewable PR sequence. For each PR:
-- Objective: what does this PR do and nothing else?
-- Key files: which files or modules change?
-- Tests: what needs to be added or updated?
-- Out of scope: what explicitly waits for the next PR?
+Task:
+"""
+[Describe the feature, bug fix, refactor, or docs change]
+"""
 
-Replace the OAuth example with your own feature and answer each field.
+Known affected areas:
+- Files/modules: [list known files or "unknown"]
+- Tests: [known test files or test gaps]
+- Docs: [README, Confluence, runbook, product docs]
+- Constraints: [deadline, compatibility, rollout, risk]
+
+Rules:
+- Keep each PR focused on one reason to review.
+- Separate refactor, behavior, tests, and docs when useful.
+- Do not hide unrelated cleanup inside the plan.
+- Call out dependencies between PRs.
+
+Output as a table with columns:
+- PR
+- Objective
+- Key files
+- Tests
+- Docs
+- Out of scope
+- Review risk
+
+End with the smallest safe first PR.
 ```
 
 ### Build reliable CI/CD pipelines
@@ -150,26 +249,30 @@ Block merges when CI fails and treat a broken pipeline as a production incident.
 **Prompt template: Pipeline review**
 
 ```text
-Review the GitHub Actions workflow below for a Node.js API service.
-Identify problems and suggest concrete improvements.
+Act as a senior engineer reviewing a CI/CD workflow for release safety.
 
-Current workflow:
-  on: [push]
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - run: npm install
-        - run: npm test
-        - run: npm run deploy
+Workflow or pipeline config:
+"""
+[Paste the workflow YAML or pipeline steps]
+"""
 
-For each finding, explain:
-- What is the gap or risk?
-- What is the concrete fix (show the corrected YAML step if relevant)?
-- What gate or check is missing that would catch real problems?
+Context:
+- Project type: [frontend, API, static site, package, mobile, etc.]
+- Required checks: [lint, tests, build, security, deploy]
+- Deployment target: [if any]
 
-Replace the example workflow with your own and apply the same review.
+Rules:
+- Do not assume tools that are not shown or mentioned.
+- Separate blockers from improvements.
+- Prefer concrete, minimal fixes.
+- Flag any step that deploys before quality gates pass.
+
+Output exactly:
+1. Blockers
+2. Recommended fixes
+3. Missing checks
+4. Safer pipeline order
+5. Human verification checklist
 ```
 
 ### Enforce data integrity across services
@@ -193,26 +296,30 @@ Treat any unvalidated input reaching business logic as a defect and enforce it i
 **Prompt template: Data integrity review**
 
 ```text
-Review this Prisma schema for a payments service and identify integrity gaps.
+Act as a senior engineer reviewing data integrity for a change.
 
-model Payment {
-  id        String   @id @default(cuid())
-  userId    String
-  amount    Float
-  currency  String
-  status    String
-  createdAt DateTime @default(now())
-}
+Context:
+- Feature or workflow: [what data is created, changed, or deleted]
+- Inputs: [forms, API payloads, jobs, imports, events]
+- Storage or state: [database table, local storage, cache, external system]
+- Code or schema:
+"""
+[Paste relevant schema, validation code, reducer, API contract, or data model]
+"""
 
-For each gap found:
-- Which field or operation is the problem?
-- What could go wrong in production? (give a concrete scenario)
-- What is the recommended fix? (constraint, validation rule, or transaction boundary)
+Rules:
+- Do not invent business rules.
+- Mark assumptions and ask questions for missing constraints.
+- Look for invalid input, missing required fields, duplicate data, race conditions, partial writes, and rollback needs.
 
-Also note: which multi-step operations need a transaction, and where would
-you add an alert or monitor to catch data anomalies early?
+Output as a table:
+- Risk
+- Where it appears
+- Production scenario
+- Recommended guardrail
+- Test to add
 
-Replace the Payment model with your own schema and apply the same review.
+End with open questions and the first fix to implement.
 ```
 
 ## Pillar 4 - Quality Engineering
@@ -240,21 +347,31 @@ During PR review, ask what happens when inputs are invalid, external calls fail,
 **Prompt template: Test coverage check**
 
 ```text
-Here is a function that applies a discount code to a cart total:
+Act as a senior test engineer looking for bugs before users do.
 
-function applyDiscount(total: number, code: string): number {
-  const discounts: Record<string, number> = { SAVE10: 0.10, SAVE20: 0.20 };
-  const rate = discounts[code];
-  return total - total * rate;
-}
+Code, behavior, or ticket:
+"""
+[Paste the function, component behavior, ticket, or PR summary]
+"""
 
-For this function:
-1. What is the most likely bug a user would hit in production?
-2. List three edge cases the happy path does not cover.
-3. What would you mock or stub to isolate this in a unit test?
-4. Write the single highest-value test case as code.
+Known constraints:
+- User impact: [who is affected]
+- Data rules: [known rules or "unknown"]
+- Dependencies: [APIs, storage, browser, time, network, permissions]
 
-Replace the discount function with your own code and apply the same analysis.
+Rules:
+- Do not invent product rules.
+- Mark assumptions clearly.
+- Prioritize tests by real user or production risk.
+- Include at least one happy path, one edge case, and one failure path.
+
+Output exactly:
+1. Risk summary
+2. Test scenarios ranked by value
+3. Highest-value test to add first
+4. What to mock or stub
+5. Gaps or open questions
+6. Human verification checklist
 ```
 
 ## Pillar 5 - Operations & Maintenance
@@ -282,18 +399,33 @@ Every change that affects operations should state what to watch, where to look f
 **Prompt template: Operational runbook**
 
 ```text
-I just shipped a background job that sends weekly summary emails to users.
-It reads from the database, renders a template, and calls the SendGrid API.
-It runs every Monday at 08:00 UTC via a cron job.
+Act as an on-call-ready engineer writing a practical runbook.
 
-Draft a runbook for this feature with the following sections:
+Feature or change:
+"""
+[Describe what changed and how users or systems interact with it]
+"""
 
-Signals to watch:  which metrics or log events indicate the job ran successfully?
-First symptom:     what is the first thing that breaks, and how would support notice?
-First response:    step-by-step: what do you check first, second, third?
-Mitigation:        how do you stop the bleeding without a full rollback?
-Rollback:          how do you fully revert if the job is causing harm?
-Owner:             who is on-call for this feature?
+Known context:
+- Owner: [team/person or "unknown"]
+- Where to observe it: [logs, dashboard, alert, browser console, support queue]
+- Rollback or mitigation: [known steps or "unknown"]
+- Links: [real links only]
 
-Replace the email-job example with your own feature and fill every section.
+Rules:
+- Do not invent dashboards, commands, links, owners, or alerts.
+- Mark missing operational details as Open questions.
+- Write for an engineer who is supporting this while you are offline.
+- Keep steps concrete and ordered.
+
+Output exactly:
+1. What changed
+2. Signals to watch
+3. Common failure symptoms
+4. First response steps
+5. Mitigation
+6. Rollback
+7. Owner and links
+8. Open questions
+9. Human verification checklist
 ```

@@ -4,33 +4,32 @@ AI agent and coding assistant instructions for this repository.
 
 ## Project Overview
 
-**SWE Best Practices Pulse** is a Next.js 16 internal tool for self-assessing engineering practices across five pillars. Developers score 16 practices on a 1–4 scale (16 questions × 4 levels = 0–64 raw score) and receive score levels, weighted pillar scores, and prioritized recommendations.
+**SWE Best Practices Pulse** is a static self-diagnostic for engineering habits across five pillars. Developers score 16 practices on a 1–4 scale (16 questions × 4 levels = 0–64 raw score) and receive score levels, pillar scores, and practical recommendations with prompt guides.
 
-- **Stack:** Next.js 16 (App Router), TypeScript 5 strict, plain CSS, no Tailwind
-- **State:** Prisma + SQLite/Postgres via Next.js Route Handlers (`/api/*`)
-- **Routes:** `/` → redirect, `/assessment` (form), `/dashboard` (results)
+- **Stack:** Next.js 16 (App Router), TypeScript 5 strict, plain CSS, no Tailwind, static export
+- **State:** Browser `localStorage` only via `src/lib/draftStorage.ts`
+- **Routes:** `/` → redirect, `/assessment` (form + repository prompt), `/dashboard` (local results), `/playbook` (static Markdown guidance)
 
 ## Architecture
 
 ```
 src/
 ├── app/               # Next.js App Router pages + globals.css
-│   └── api/           # Route handlers for submissions, sessions
 ├── components/
 │   └── assessment/    # All UI components (client-only, "use client")
 ├── data/              # assessmentTemplate.ts - questions, pillars, recommendations
-├── lib/               # scoring.ts (pure), storage.ts (API client), prisma.ts (singleton client)
+├── lib/               # scoring.ts (pure), draftStorage.ts, playbookContent.ts
 └── types/             # assessment.ts - canonical domain types
 ```
 
 **Key invariant:** `src/lib/scoring.ts` is a pure function: never import browser APIs there.  
-**Key invariant:** `src/lib/prisma.ts` owns the singleton Prisma client for server/runtime safety.  
-**Key invariant:** `src/lib/storage.ts` is a client API wrapper around `/api/*` and must not read/write browser storage directly.
+**Key invariant:** Browser persistence lives in `src/lib/draftStorage.ts`; do not access `localStorage` directly from scoring or template modules.  
+**Key invariant:** The current app has no API routes, server persistence, authentication, admin panel, or team-session workflow.
 
 ## Code Style
 
 - TypeScript strict mode: no `any`, no `@ts-ignore`
-- All React components are `"use client"` (this project has no Server Components with state)
+- Client components that use state or browser APIs must include `"use client"`
 - CSS is in `src/app/globals.css` using CSS variables (`--brand-primary`, `--text`, `--bg-soft`, etc.)
 - No Tailwind, no CSS-in-JS, no component libraries
 - Use `clamp()` for responsive sizing; breakpoints at 768px, 540px, 480px
@@ -45,25 +44,22 @@ src/
 - **Score band rule:** Foundational is below 43% of max score, Disciplined is 43% to below 65%, Optimized is 65% to below 85%, and Strategic is 85% and above
 - **Pillar floor rule:** `Optimized` requires every pillar average to be at least `2.5`; `Strategic` requires every pillar average to be at least `3.0`
 - `calculateAssessment(model, answers)` returns an `AssessmentResult`, the single source of truth for all scores
-- **Per-pillar recommendations:** Each pillar shows action items (default: 1 per pillar), the most relevant next-level recommendations based on current score. Configure via `NEXT_PUBLIC_MAX_RECOMMENDATIONS` environment variable in `src/lib/config.ts`.
+- **Per-pillar recommendations:** Each pillar shows action items (default: 1 per pillar), the most relevant next-level recommendations based on current score. Recommendation copy should follow `Do / Prompt / Output / Check` when practical. Prompts should give role, context, rules, output format, assumptions/open questions, and human verification. Configure via `NEXT_PUBLIC_MAX_RECOMMENDATIONS` environment variable in `src/lib/config.ts`.
 
 ## Persistence
 
-Prisma models (see `prisma/schema.prisma`):
+The current product stores data only in browser `localStorage`:
 
-| Model               | Contents                                                            |
-| ------------------- | ------------------------------------------------------------------- |
-| `Submission`        | Completed assessments (`email`, `answers`, `result`, `submittedAt`) |
-| `AssessmentSession` | Team sessions for group assessments                                 |
-| `SessionParticipant` | Explicit membership for users who have submitted in a team session |
+- Draft answers use the draft key managed by `src/lib/draftStorage.ts`
+- Latest questionnaire results use `assessment-result`
+- Repository-analysis JSON is parsed and displayed locally; it is not sent to a server
 
-Never query Prisma directly from client components: use `src/lib/storage.ts` and `/api/*` route handlers.
+Do not add server persistence, API routes, authentication, or Confluence runtime reads unless a new change explicitly reintroduces infrastructure.
 
 ## Build & Test
 
 ```bash
 npm install          # install dependencies
-npm run prisma:migrate:dev # create/update local database schema
 npm run dev          # start dev server on http://localhost:3000
 npm run build        # production build (must pass before any PR)
 npm run lint         # ESLint (must return 0 errors before any PR)
@@ -94,8 +90,7 @@ If any required item cannot be completed (for example, missing testability in le
 
 - Tests live in `src/lib/__tests__/` alongside the code they test
 - Use Vitest globals (`describe`, `it`, `expect`, `beforeEach`) - no imports needed for them
-- Mock `fetch` in storage tests (`src/lib/storage.ts` is API-based)
-- Keep team stats logic tested via pure helper (`buildTeamStats`)
+- Mock browser storage through existing draftStorage test patterns
 - Test pure logic (scoring) separately from storage side-effects
 - Aim for branch coverage on all scoring thresholds and edge cases
 
@@ -122,27 +117,27 @@ The project includes an automated repository analysis prompt (`prompts/repo-anal
    - When scoring logic changes, update the prompt immediately
 
 2. **Pillar definitions:**
-   - Prompt defines 5 pillars with 2-3 questions each (14 total)
+   - Prompt defines the same 5 pillars and current question set as `src/data/assessmentTemplate.ts`
    - Questions and scoring rubrics must match `src/data/assessmentTemplate.ts` intent
    - Each question has a 1–4 scale with rubrics describing each level
 
 3. **JSON output format:**
-   - Prompt generates a JSON object with `email`, `analysis`, `raw_score`, `score_level`
-   - This JSON is submitted via POST to `/api/submissions/analysis`
-   - The backend creates a `Submission` record with parsed data
+   - Prompt generates a JSON object with `analysis`, pillar question scores, `raw_score`, and `score_level`
+   - This JSON is pasted into the local repository-analysis form
+   - The current static app validates and displays the score locally
 
 4. **Frontend integration:**
    - `RepositoryAnalysisSubmission` component handles JSON input and submission
-   - Validation occurs on both client (format check) and server (payload validation)
-   - Results are stored identically to questionnaire submissions for unified reporting
+   - Validation occurs on the client
+   - Results are not persisted to a backend in the current static product
 
 ## Common Gotchas
 
 - **Don't add `"use client"` to `src/lib/*.ts`**: they're plain TypeScript modules
-- **Don't instantiate `PrismaClient` in multiple files**: use `src/lib/prisma.ts`
-- **Don't call Prisma from client components**: use `/api/*` route handlers
+- **Don't add server-only dependencies or API routes** unless the task explicitly changes the static deployment model
 - **Don't use `0-3` scale**: the scale is `1-4`; `ScoreValue` enforces this
 - **Don't use normalized scores**: use raw totals and derive thresholds from max score
 - **Score thresholds are resolved by `resolveScoreBands(maxScore)`** in `src/lib/scoring.ts` — the single source of truth.
 - **`AssessmentApp.tsx` is a legacy entry point**: the active form is `AssessmentForm.tsx`
+- **Confluence is not a runtime dependency**: without API credentials, link to Confluence manually from content instead of fetching it from the browser
 - **`vitest.config.ts`** sets the `@` path alias to `src/` - use `@/lib/...` in imports

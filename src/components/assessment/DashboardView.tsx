@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AssessmentReview } from "@/components/assessment/AssessmentReview";
-import { assessmentTemplate } from "@/data/assessmentTemplate";
 import { loadResult, LocalResult } from "@/lib/draftStorage";
 import { getPlaybookHrefForCategory } from "@/lib/playbookLinks";
 import { getScoreLevelProgress } from "@/lib/scoring";
@@ -16,13 +15,23 @@ export function DashboardView() {
   const [toastError, setToastError] = useState("");
 
   useEffect(() => {
-    try {
-      setLocalResult(loadResult());
-    } catch (error) {
-      setToastError(error instanceof Error ? error.message : "Failed to load results.");
-    } finally {
-      setIsLoading(false);
-    }
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+
+      try {
+        setLocalResult(loadResult());
+      } catch (error) {
+        setToastError(error instanceof Error ? error.message : "Failed to load results.");
+      } finally {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (isLoading) {
@@ -82,7 +91,7 @@ function ScoreCard({ localResult }: { localResult: LocalResult }) {
     <div className="dashboard-grid">
       <article className="card score-card primary">
         <header className="score-header">
-          <h2>Best Practices Framework Score</h2>
+          <h2>Best Practices Self-Diagnostic Score</h2>
           <p>
             {answered}/{total} answered
           </p>

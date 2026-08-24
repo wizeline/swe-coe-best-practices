@@ -83,7 +83,7 @@ describe("DashboardView", () => {
       root.render(<DashboardView />);
     });
 
-    expect(container.textContent).toContain("Best Practices Framework Score");
+    expect(container.textContent).toContain("Best Practices Self-Diagnostic Score");
     expect(container.textContent).toContain("46");
     expect(container.textContent).toContain("Optimized");
   });

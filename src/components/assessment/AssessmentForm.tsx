@@ -127,6 +127,7 @@ export function AssessmentForm() {
 
   return (
     <div>
+      <ErrorToast message={toastError} onClose={() => setToastError("")} />
       {showOnboarding && (
         <div
           className="modal-overlay"

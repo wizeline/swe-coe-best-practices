@@ -7,7 +7,7 @@ const FRAMEWORK_PATH = path.join(ROOT, "FRAMEWORK.md");
 
 const START_MARKER = "<!-- AUTO-GENERATED:ASSESSMENT_FRAMEWORK:START -->";
 const END_MARKER = "<!-- AUTO-GENERATED:ASSESSMENT_FRAMEWORK:END -->";
-const SECTION_HEADER = "## Assessment Framework — 5 Pillars";
+const SECTION_HEADER = "## Self-Diagnostic Assessment — 5 Pillars";
 
 const BAND_ORDER = ["foundational", "disciplined", "optimized", "strategic"];
 const BAND_LABEL = {

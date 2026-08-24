@@ -1,84 +1,93 @@
 # Product Reference - SWE Best Practices Pulse
 
-Product definition and scoring model for the assessment experience.
-
-> For the complete framework reference (pillars, questions, rubrics, recommendations, and the Engineering Excellence Cycle) in a stakeholder-readable format, see [FRAMEWORK.md](FRAMEWORK.md).
+Product definition for the current static self-diagnostic experience.
 
 ## At A Glance
 
-Internal tool for self-assessing engineering practices across five pillars at a personal level. Developers score 16 of their own habits on a 1-4 scale and receive a score level, weighted pillar scores, and prioritized recommendations.
+SWE Best Practices Pulse is a static self-diagnostic tool for engineers. It helps a user assess their current engineering habits across five pillars, review their answers, and get practical recommendations with AI prompt guides for improving their next task.
+
+The product is intentionally small: no server, no login, no database, no team sessions, and no admin reporting. It is designed to work as a zero-infrastructure GitHub Pages site.
 
 ## Core Experience
 
-- Personal self-assessment across 5 pillars and 16 questions
-- Dynamic score bands derived from the active framework size
-- Per-pillar action items based on the current score level
-- Team sessions where owners can see aggregated reports
-- Joined-session access where participants can reopen their own latest result and action items
-- Repository analysis as an alternative input method for dashboard results
+- Complete a personal 16-question self-diagnostic
+- Receive a score level, pillar breakdown, and prioritized recommendations
+- Review the exact answers selected in the latest questionnaire submission
+- Open the playbook for deeper guidance and copyable prompt patterns
+- Run an optional repository-analysis prompt in an external AI assistant and inspect the returned score locally
+- Use Confluence as the broader CoE knowledge hub when teams need richer examples or workshop material
 
 ## What It Measures
 
 Five pillars, each with 2-4 questions scored from 1 (`Foundational`) to 4 (`Strategic`):
 
-| Pillar                         | Focus                                                                                                           |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| 1 - Ideation and Requirements  | Intent Engineering: how rigorously requirements are captured, structured, and traced                            |
-| 2 - Design and Architecture    | Systematic Planning: solution design, pattern reuse, security assessment, CI/CD reliability, and data integrity |
-| 3 - Development                | Implementation Hygiene: clean, traceable, well-documented code changes                                          |
-| 4 - Quality Engineering        | Validation and Reliability: testing thoroughness, audit practices, regression protection                        |
-| 5 - Operations and Maintenance | Observability: debuggability, handoff readiness, and operational context                                        |
+| Pillar                         | Focus                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------- |
+| 1 - Ideation and Requirements  | Requirements clarity, impact analysis, and personal delivery reflection                      |
+| 2 - Design and Architecture    | Technical planning, pattern reuse, and security thinking                                    |
+| 3 - Development Hygiene        | Reviewable PRs, traceability, docs, CI/CD habits, and data integrity                        |
+| 4 - Quality Engineering        | Edge-case testing, self-review, and test debt management                                    |
+| 5 - Operations and Maintenance | Debuggability, observability, runbooks, and handoff readiness                               |
 
 ## Scoring Scale
 
 Per-question scale: 1-4 (Foundational to Strategic)  
 Raw score range: dynamic (`0..questionCount * 4`)
 
-| Band rule (by max score) | Label | Definition |
+| Band rule (by max score) | Label | Meaning |
 | --- | --- | --- |
-| Bottom range up to Disciplined threshold | Foundational | Base adherence. Follows standard Definition of Done protocols and coding conventions. Execution is reliable but predominantly ad-hoc, with minimal structural intent modeling or automated accelerators. |
-| 43% to below 65% | Disciplined | Elite manual rigor. Exceptional autonomous delivery through extreme manual discipline: consistent Spec-Driven Development, Docs-as-Code, modular architectural isolation, zero syntax or deployment oversight. |
-| 65% to below 85%, with no pillar below 2.5 | Optimized | Efficiency multiplier. Successfully leverages AI, advanced scripting, and automated workflows to accelerate the Disciplined-tier habits. Operates as an "Intelligence Curator" — uses automation to offload toil while retaining full human accountability over quality, edge cases, and design parity. |
-| 85% and above, with no pillar below 3.0 | Strategic | Systemic influence. Operates fully "over-the-loop," orchestrating complex cross-system architectures and agentic pipelines. Defines organization-wide engineering patterns, actively mentors peers, and manages macro-level systemic risks. |
+| Below 43% | Foundational | Practices are mostly ad hoc or inconsistent. The recommendation should help the user create the first reviewable artifact. |
+| 43% to below 65% | Disciplined | Basic rigor exists. The recommendation should make the practice repeatable and easier to verify. |
+| 65% to below 85%, with no pillar below 2.5 | Optimized | The user can responsibly use AI or automation to reduce toil while keeping human accountability. |
+| 85% and above, with no pillar below 3.0 | Strategic | The user can turn the practice into a team habit, template, or shared standard. |
 
-The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScore)` in `src/lib/scoring.ts`, so adding/removing questions automatically rescales all bands.
+The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScore)` in [src/lib/scoring.ts](src/lib/scoring.ts), so adding/removing questions automatically rescales all bands.
 
-## Dashboard And Session Behavior
+## Recommendation Model
 
-- Individual submissions show the user's own score, level, category breakdown, and action items
-- Individual questionnaire submissions can also be reopened in a read-only review mode from the dashboard so users can inspect the exact answers they selected
-- Team session owners can open an aggregate team view with team score, level, participant summaries, and action items
-- Team session owners also see a radar chart comparing their team's pillar averages against the all-time org baseline
-- Team session participants can reopen joined sessions from the dashboard, see their own latest submission in that session, and review their own answers in read-only mode
-- Aggregated team data remains owner-only
-- Dashboard cards show current level and next target level for both individual and team views
+Recommendations are meant to be immediately usable with an AI assistant. Each action should use the `Do / Prompt / Output / Check` pattern and answer:
+
+- What should the engineer do next?
+- What prompt can they run?
+- What artifact should come out of it?
+- How should they verify the artifact before trusting it?
+
+Good recommendation shape:
+
+```text
+Do: create a short ADR before coding.
+Prompt: act as a senior engineer; use provided context only; draft context, decision, alternatives, tradeoffs, and one security risk; mark assumptions and open questions.
+Output: ADR or design note.
+Check: a reviewer can understand the approach without reading the implementation diff.
+```
 
 ## Routes
 
 | Route       | Purpose                                                                       |
 | ----------- | ----------------------------------------------------------------------------- |
-| /           | Redirects based on auth state                                                 |
-| /login      | Google sign-in page                                                           |
-| /assessment | Individual or team-session voting form (auth required)                        |
-| /dashboard  | Personal results plus owned and joined team session views (auth required)     |
-| /playbook   | Markdown-backed engineering playbook organized by pillar (auth required)      |
-| /admin      | Admin-only cross-team comparison plus database activity stats (auth required) |
+| /           | Redirects to `/assessment`                                                    |
+| /assessment | Personal questionnaire and repository-analysis prompt entry point             |
+| /dashboard  | Latest local result, score breakdown, recommendations, and answer review      |
+| /playbook   | Markdown-backed engineering playbook organized by pillar                      |
 
-## Additional Product Notes
+## Data And Persistence
 
-- Team session reports show one prioritized action item per pillar based on the team's current score level
-- Category rows show score as `current / 4.0` to make progress easy to scan
-- Read-only answer review is limited to questionnaire submissions that store question-level answers; repository-analysis submissions continue to show summary results only
-- Session cards include creation date and encourage a `Team - Quarter` naming pattern
-- Draft answers are stored locally in the browser until submission
-- The admin page shows database activity totals and cross-team comparisons with pagination, filtering, and drilldown
-- The admin page also renders always-visible managerial charts scoped to the active date filter: score-level distribution and org pillar averages
-- Team detail drilldown under `/admin/team/[code]` adds a team-vs-org radar so managers can see where a single team diverges from the organization baseline
-- The playbook is maintained in `content/playbook.md` and rendered into pillar sections so content can evolve without UI changes
+- Draft answers are stored locally in the browser until submission.
+- Submitted questionnaire results are stored in `localStorage` under `assessment-result`.
+- Repository-analysis submissions are parsed locally and displayed in the component; they are not sent to a server.
+- Clearing browser storage or changing devices removes local results.
+- The app does not read from or write to Confluence at runtime.
+
+## Content Sources
+
+- Questions, scoring hints, and recommendations live in [src/data/assessmentTemplate.ts](src/data/assessmentTemplate.ts).
+- The playbook lives in [content/playbook.md](content/playbook.md).
+- Prompt templates live in [prompts/](prompts/).
+- Confluence can host expanded CoE guidance, examples, recordings, and workshop material. Until API access exists, link to Confluence manually from content where useful.
 
 ## Repository Analysis (Alternative Assessment Method)
 
-In addition to the manual questionnaire, engineers can use an automated repository analysis prompt to score their projects. This method analyzes observable signals from a repository: commit history, CI/CD configuration, test coverage, documentation, and code organization, to determine a score.
+In addition to the manual questionnaire, engineers can use an automated repository analysis prompt to score their projects. This method analyzes observable signals from a repository: commit history, CI/CD configuration, test coverage, documentation, and code organization.
 
 ### How It Works
 
@@ -94,8 +103,8 @@ In addition to the manual questionnaire, engineers can use an automated reposito
 4. Receive two outputs:
    - a minimal JSON block for dashboard submission
    - a separate private recommendations section for the user
-5. Paste only the JSON into `/assessment` → `Repository Analysis`
-6. Review the result on the dashboard alongside questionnaire submissions
+5. Paste only the JSON into `/assessment` -> `Repository Analysis`
+6. Review the score displayed locally
 
 The submission JSON contains:
 
@@ -104,7 +113,7 @@ The submission JSON contains:
 - raw score
 - score level
 
-Route failures while submitting or loading assessment data are surfaced with toast notifications so users receive immediate feedback without losing form context.
+The repository-analysis flow is local-only. It does not create a persisted dashboard result.
 
 ### Advantages
 
@@ -124,9 +133,4 @@ The prompt analyzes:
 - README, architecture docs, and onboarding materials
 - Monitoring and incident-response processes
 
-Results are stored identically to questionnaire submissions, so you can compare both methods and track progress over time.
-
-## Future Proposals
-
-- Session invite by email: let owners invite specific users to a session instead of sharing a public link.
-- Historical trend charts: plot a team's average score over time when a session is run repeatedly.
+Private recommendations stay outside the JSON and should avoid secrets or sensitive repository details.

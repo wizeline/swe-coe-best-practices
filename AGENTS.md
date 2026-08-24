@@ -44,7 +44,8 @@ src/
 - **Score band rule:** Foundational is below 43% of max score, Disciplined is 43% to below 65%, Optimized is 65% to below 85%, and Strategic is 85% and above
 - **Pillar floor rule:** `Optimized` requires every pillar average to be at least `2.5`; `Strategic` requires every pillar average to be at least `3.0`
 - `calculateAssessment(model, answers)` returns an `AssessmentResult`, the single source of truth for all scores
-- **Per-pillar recommendations:** Each pillar shows action items (default: 1 per pillar), the most relevant next-level recommendations based on current score. Recommendation copy should follow `Do / Prompt / Output / Check` when practical. Prompts should give role, context, rules, output format, assumptions/open questions, and human verification. Configure via `NEXT_PUBLIC_MAX_RECOMMENDATIONS` environment variable in `src/lib/config.ts`.
+- **Per-pillar recommendations:** Each pillar shows action items (default: 1 per pillar), the most relevant next-level recommendations based on current score. Dashboard recommendation copy should be concise and immediately actionable; keep detailed `Do / Prompt / Output / Check` guidance in the playbook or prompt files. Prompts should give role, context, rules, output format, assumptions/open questions, and human verification. Configure via `NEXT_PUBLIC_MAX_RECOMMENDATIONS` environment variable in `src/lib/config.ts`.
+- **Public reference calibration:** Questions and recommendations are calibrated by selected public engineering references (DORA, SPACE, NIST SSDF, OWASP SAMM, ISO/IEC 25010, SRE). Use wording like "informed by" or "aligned with selected practices"; never claim official certification, compliance, maturity audit, or external benchmark status.
 
 ## Persistence
 
@@ -140,4 +141,5 @@ The project includes an automated repository analysis prompt (`prompts/repo-anal
 - **Score thresholds are resolved by `resolveScoreBands(maxScore)`** in `src/lib/scoring.ts` — the single source of truth.
 - **`AssessmentApp.tsx` is a legacy entry point**: the active form is `AssessmentForm.tsx`
 - **Confluence is not a runtime dependency**: without API credentials, link to Confluence manually from content instead of fetching it from the browser
+- **Public references are calibration input, not another score**: do not add a separate industry score unless a future product change explicitly asks for it
 - **`vitest.config.ts`** sets the `@` path alias to `src/` - use `@/lib/...` in imports

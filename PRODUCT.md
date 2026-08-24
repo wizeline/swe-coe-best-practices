@@ -8,6 +8,8 @@ SWE Best Practices Pulse is a static self-diagnostic tool for engineers. It help
 
 The product is intentionally small: no server, no login, no database, no team sessions, and no admin reporting. It is designed to work as a zero-infrastructure GitHub Pages site.
 
+The single score is informed by selected public engineering practices such as DORA, SPACE, NIST SSDF, OWASP SAMM, ISO/IEC 25010, and SRE. It is not an official benchmark, certification, compliance score, or maturity audit.
+
 ## Core Experience
 
 - Complete a personal 16-question self-diagnostic
@@ -45,20 +47,19 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 
 ## Recommendation Model
 
-Recommendations are meant to be immediately usable with an AI assistant. Each action should use the `Do / Prompt / Output / Check` pattern and answer:
+Dashboard recommendations are meant to be short, practical next actions. The playbook and prompt files provide the deeper `Do / Prompt / Output / Check` structure when a user wants step-by-step guidance.
+
+Each recommendation should still answer, directly or through its linked playbook section:
 
 - What should the engineer do next?
 - What prompt can they run?
 - What artifact should come out of it?
 - How should they verify the artifact before trusting it?
 
-Good recommendation shape:
+Good dashboard recommendation shape:
 
 ```text
-Do: create a short ADR before coding.
-Prompt: act as a senior engineer; use provided context only; draft context, decision, alternatives, tradeoffs, and one security risk; mark assumptions and open questions.
-Output: ADR or design note.
-Check: a reviewer can understand the approach without reading the implementation diff.
+Create a short ADR before coding. Include context, decision, tradeoffs, one risk, and how reviewers can validate the approach.
 ```
 
 ## Routes

@@ -4,7 +4,7 @@ This playbook turns self-diagnostic recommendations into practical next steps. U
 
 The tool is static and does not connect to Confluence directly. Keep Confluence as the broader knowledge hub for team standards, examples, and workshop material; use this playbook as the lightweight, repo-versioned guide that can be rendered in the self-diagnostic.
 
-When using an AI assistant, treat every prompt output as a draft. The useful pattern is: ask the agent to structure the work, produce a concrete artifact, then verify the artifact against real code, tests, owners, and project constraints.
+When using an AI assistant, treat every prompt output as a draft. The useful pattern is: ask the agent to structure the work, produce a concrete artifact, then verify the artifact against real code, tests, owners, and project constraints. The guidance is informed by public practices such as DORA, SPACE, NIST SSDF, OWASP SAMM, ISO/IEC 25010, and SRE, without treating them as a separate score or certification.
 
 ## Prompting Pattern For Every Recommendation
 

@@ -3,9 +3,9 @@ import { AssessmentModel } from "@/types/assessment";
 export const assessmentTemplate: AssessmentModel = {
   title: "SWE Best Practices Pulse",
   description:
-    "A 16-question self-diagnostic about how you usually work on tickets, PRs, tests, docs, and production handoffs. Answer based on what you personally do today, not what your team intends to do.",
+    "A 16-question self-diagnostic about the evidence behind how you work on tickets, PRs, tests, docs, and production handoffs. Answer based on what you personally do today, not what your team intends to do.",
   scaleLabel:
-    "1 = I rarely do this · 2 = I do this sometimes · 3 = I do this consistently · 4 = I do this consistently and help improve the habit for others",
+    "1 = little or no repeatable evidence · 2 = informal or inconsistent evidence · 3 = repeatable evidence in my work · 4 = repeatable evidence that I review, improve, and share with others",
   categories: [
     {
       id: "pillar-1-ideation",
@@ -51,28 +51,28 @@ export const assessmentTemplate: AssessmentModel = {
           band: "foundational",
           title: "Turn rough requests into clear tickets",
           action:
-            "Do: Add a short Why / What / Done block before coding. Prompt: 'Act as a senior product engineer. Convert this request into a concise ticket. Use only the provided context, mark assumptions, list open questions, and write testable acceptance criteria.' Output: ticket draft. Check: every Done item can be observed in the app, API, logs, or tests.",
+            "Before coding, add a short Why / What / Done block to the ticket. Ask an AI assistant to draft acceptance criteria, then confirm assumptions with the requester.",
         },
         {
           id: "p1-r2",
           band: "disciplined",
           title: "Make acceptance criteria testable",
           action:
-            "Do: Write one scenario per behavior and note the likely impacted files. Prompt: 'Act as a senior QA-minded engineer. Convert this ticket into Given/When/Then scenarios. Do not invent requirements; put missing details under Open Questions. Also list files or flows likely affected.' Output: scenarios plus impact note. Check: each scenario maps to a planned automated or manual check.",
+            "Write one Given/When/Then scenario per behavior and add a short impact note. Each scenario should map to a test, manual check, or explicit open question.",
         },
         {
           id: "p1-r3",
           band: "optimized",
           title: "Use AI to clean up messy input",
           action:
-            "Do: Use an assistant to turn Slack threads, notes, or vague tickets into a reviewed spec. Prompt: 'Act as a senior engineer preparing implementation. Summarize the request, separate facts from assumptions, write acceptance criteria, non-goals, dependencies, risks, and questions. Do not fill gaps silently.' Output: reviewed spec. Check: confirm assumptions with the requester before implementation.",
+            "Use AI to turn Slack threads or vague tickets into a spec with facts, assumptions, risks, and open questions. Review it yourself before implementation.",
         },
         {
           id: "p1-r4",
           band: "strategic",
           title: "Share a better ticket habit",
           action:
-            "Do: Turn your ticket cleanup process into a team template. Prompt: 'Act as an engineering lead. Create a lightweight ticket template for Jira or Linear with sections for context, acceptance criteria, assumptions, risks, and verification. Include guidance for when to ask follow-up questions.' Output: shared template or Confluence note. Check: at least one teammate uses it and gives feedback.",
+            "Create a lightweight Jira, Linear, or Confluence template for context, acceptance criteria, assumptions, risks, and verification. Have a teammate try it and improve it from feedback.",
         },
       ],
     },
@@ -120,28 +120,28 @@ export const assessmentTemplate: AssessmentModel = {
           band: "foundational",
           title: "Look before building from scratch",
           action:
-            "Do: Search for similar code and write down what you found. Prompt: 'Act as a senior engineer joining this repo. Given this task and file list, identify existing modules, patterns, or docs I should inspect before designing the solution. Mark uncertain guesses.' Output: reuse checklist. Check: your ticket or PR names at least one reused or intentionally rejected pattern.",
+            "Search the repo for similar files, components, or docs before designing. Note one pattern you reused or intentionally rejected in the ticket or PR.",
         },
         {
           id: "p2-r2",
           band: "disciplined",
           title: "Write a small design note",
           action:
-            "Do: Write a short design note before coding risky work. Prompt: 'Act as a senior engineer reviewing a design. Draft a one-page ADR with context, decision, alternatives, tradeoffs, data flow, security concern, rollout, and open questions. Do not assume missing facts.' Output: ADR or design note. Check: a reviewer can understand the approach before reading the diff.",
+            "For risky or cross-cutting work, write a one-page design note with context, decision, tradeoffs, risks, and open questions before coding.",
         },
         {
           id: "p2-r3",
           band: "optimized",
           title: "Use AI to challenge the design",
           action:
-            "Do: Ask an assistant to find holes before the PR exists. Prompt: 'Act as a skeptical staff engineer. Review this design for unclear boundaries, security risks, data integrity gaps, failure modes, simpler alternatives, and missing tests. Separate facts, assumptions, and questions.' Output: design review checklist. Check: every accepted risk has a mitigation, owner, or explicit non-goal.",
+            "Ask an AI assistant to review your design for unclear boundaries, security risks, data gaps, failure modes, and missing tests. Turn accepted findings into mitigations or non-goals.",
         },
         {
           id: "p2-r4",
           band: "strategic",
           title: "Turn good design notes into a team habit",
           action:
-            "Do: Share a template that makes design review easier. Prompt: 'Act as an engineering lead. Create a practical ADR template for our team with sections for context, options, decision, risks, security, observability, tests, rollout, and human review of AI suggestions.' Output: team ADR template. Check: new design notes use the template consistently.",
+            "Create a practical ADR template for the team with context, options, decision, risks, security, observability, tests, and rollout notes.",
         },
       ],
     },
@@ -209,28 +209,28 @@ export const assessmentTemplate: AssessmentModel = {
           band: "foundational",
           title: "Make the next PR smaller and safer",
           action:
-            "Do: Keep the next PR to one concern and add one guardrail. Prompt: 'Act as a senior engineer. Split this task into the smallest reviewable PRs. For each PR, list goal, files, tests, docs, risks, and what is out of scope. Do not add unrelated cleanup.' Output: PR plan. Check: the PR description clearly says what is included and excluded.",
+            "Keep your next PR focused on one concern. Add a short note that says what is included, what is out of scope, and which test or CI check protects it.",
         },
         {
           id: "p3-r2",
           band: "disciplined",
           title: "Map the ticket to the PR",
           action:
-            "Do: Show how the implementation covers the ticket. Prompt: 'Act as a careful reviewer. Compare this ticket and PR plan. Create a traceability table with acceptance criteria, code areas, tests, docs, and missing evidence. Mark anything uncertain.' Output: traceability table. Check: each acceptance criterion has evidence or an explicit follow-up.",
+            "Before review, map each acceptance criterion to code, tests, docs, or manual verification. Make missing evidence explicit instead of leaving reviewers to find it.",
         },
         {
           id: "p3-r3",
           band: "optimized",
           title: "Use AI for PR readiness checks",
           action:
-            "Do: Ask an assistant to review readiness before humans spend time on the PR. Prompt: 'Act as a strict PR reviewer. Given this diff, ticket, and test output, find scope creep, missing acceptance criteria, weak tests, docs gaps, data integrity risks, and unclear rollback notes. Separate blockers from suggestions.' Output: PR readiness checklist. Check: fix blockers before requesting review.",
+            "Run an AI-assisted PR readiness check before requesting human review. Ask for blockers around scope, acceptance criteria, tests, docs, data integrity, and rollback notes.",
         },
         {
           id: "p3-r4",
           band: "strategic",
           title: "Create a reusable PR checklist",
           action:
-            "Do: Turn your PR habits into a team checklist. Prompt: 'Act as an engineering lead. Create a practical PR template with sections for summary, acceptance criteria coverage, tests run, docs changed, risks, rollback, and AI-assisted review notes. Keep it lightweight.' Output: PR template. Check: the team uses it for at least one feature cycle.",
+            "Create a lightweight PR template covering summary, acceptance criteria, tests run, docs changed, risks, rollback, and AI-assisted review notes.",
         },
       ],
     },
@@ -277,28 +277,28 @@ export const assessmentTemplate: AssessmentModel = {
           band: "foundational",
           title: "Add one test that can fail for a real reason",
           action:
-            "Do: Add one edge-case or failure-path test, not only the demo path. Prompt: 'Act as a senior test engineer. For this function or feature, list the happy path, likely edge cases, realistic failure modes, and the single highest-value test to add first. Do not invent product rules.' Output: focused test plan. Check: at least one negative or boundary case is automated.",
+            "Add one edge-case or failure-path test to your next change, not only the happy path. Start with the bug a user would most likely notice.",
         },
         {
           id: "p4-r2",
           band: "disciplined",
           title: "Review your diff before others do",
           action:
-            "Do: Self-review the risky parts before requesting review. Prompt: 'Act as a strict reviewer. Audit this diff against the ticket and tests. Identify logic gaps, weak assertions, flaky test risks, missing edge cases, and one small cleanup worth doing now. Separate blockers from nice-to-haves.' Output: self-review note. Check: the PR description names the riskiest area and what you checked.",
+            "Self-review the riskiest part of your diff before tagging reviewers. Name that risk and what you checked in the PR description.",
         },
         {
           id: "p4-r3",
           band: "optimized",
           title: "Use AI to find tests you missed",
           action:
-            "Do: Use an assistant to expand your test thinking, then choose tests yourself. Prompt: 'Act as a QA strategist. Given this code, ticket, and known constraints, propose tests for invalid input, boundary values, partial failure, concurrency or repeated actions, and regression risk. Rank by user impact and mark assumptions.' Output: prioritized test list. Check: merged tests match real behavior, not invented rules.",
+            "Ask AI for missing tests around invalid input, boundary values, partial failure, repeated actions, and regressions. Keep only tests that match real product rules.",
         },
         {
           id: "p4-r4",
           band: "strategic",
           title: "Turn bug patterns into shared checks",
           action:
-            "Do: Convert repeated bugs into a checklist your team can use. Prompt: 'Act as an engineering lead. Analyze these recent bugs or review comments and create a lightweight quality checklist with examples, test patterns, CI guardrails, and when to apply each item.' Output: team quality checklist. Check: the checklist catches or prevents a recurring issue.",
+            "Turn recurring bugs or review comments into a small team checklist with examples, test patterns, and CI guardrails.",
         },
       ],
     },
@@ -335,28 +335,28 @@ export const assessmentTemplate: AssessmentModel = {
           band: "foundational",
           title: "Add signals someone can search",
           action:
-            "Do: Add at least one searchable signal for the feature. Prompt: 'Act as an on-call engineer. For this feature, list the first three questions support would ask if it breaks. Propose logs, metrics, or alerts that answer those questions. Include event names and fields; mark assumptions.' Output: logging and metrics note. Check: each signal can be found in the real logging or monitoring tool.",
+            "Add one searchable signal for your next feature: a structured log, metric, dashboard, or alert that answers a real support question.",
         },
         {
           id: "p5-r2",
           band: "disciplined",
           title: "Leave a handoff note",
           action:
-            "Do: Write the minimum context another engineer needs. Prompt: 'Act as a senior engineer writing a handoff note. Draft sections for what changed, how to verify it, signals to watch, likely failure symptoms, first debugging steps, rollback or mitigation, owner, and links. Do not invent links or dashboards.' Output: README, runbook, or Confluence note. Check: another engineer can find it without asking you.",
+            "Write the minimum handoff another engineer needs: what changed, how to verify it, signals to watch, first debugging steps, rollback or mitigation, and owner.",
         },
         {
           id: "p5-r3",
           band: "optimized",
           title: "Use AI to draft support docs",
           action:
-            "Do: Use an assistant to turn PR context into support-ready docs. Prompt: 'Act as an on-call-ready engineer. From this PR summary, diff, and known monitoring links, draft a runbook with signals, common failures, triage steps, mitigation, rollback, and ownership. Mark every claim that needs verification.' Output: reviewed runbook. Check: all links, dashboards, commands, and rollback steps are real.",
+            "Use AI to draft a runbook from your PR context, then verify every link, dashboard, command, owner, and rollback step before sharing it.",
         },
         {
           id: "p5-r4",
           band: "strategic",
           title: "Create a team handoff standard",
           action:
-            "Do: Make handoff notes a normal part of delivery. Prompt: 'Act as an engineering lead. Create a lightweight runbook template for new features with required signals, first-response steps, rollback, ownership, links, and rules for reviewing AI-generated drafts.' Output: shared runbook template in Confluence or the repo. Check: every new feature links to a support note.",
+            "Create a lightweight runbook template for new features with required signals, first-response steps, rollback, ownership, and links.",
         },
       ],
     },

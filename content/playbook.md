@@ -1,14 +1,12 @@
 # Best Practices Self-Diagnostic Playbook
 
-This playbook turns self-diagnostic recommendations into practical next steps. Use it when you want a prompt, artifact, or review checklist for one of the five engineering practice pillars. Content is organized by pillar so the dashboard can link recommendations to the right section.
+Use this playbook to turn assessment recommendations into practical engineering habits. Each pillar includes a short action, the reason it matters, and a way to apply it through a reviewable artifact or checklist.
 
-The tool is static and does not connect to Confluence directly. Keep Confluence as the broader knowledge hub for team standards, examples, and workshop material; use this playbook as the lightweight, repo-versioned guide that can be rendered in the self-diagnostic.
+Start with the manual guidance and adapt it to your codebase, team, and delivery constraints. The examples are informed by selected public engineering practices, but they are not a certification or external benchmark.
 
-When using an AI assistant, treat every prompt output as a draft. The useful pattern is: ask the agent to structure the work, produce a concrete artifact, then verify the artifact against real code, tests, owners, and project constraints. The guidance is informed by public practices such as DORA, SPACE, NIST SSDF, OWASP SAMM, ISO/IEC 25010, and SRE, without treating them as a separate score or certification.
+## Optional Prompt Support
 
-## Prompting Pattern For Every Recommendation
-
-Use this pattern when adapting any playbook prompt to your work.
+Prompts are optional accelerators for drafting an artifact. The engineering decision, evidence, and final review remain with the person doing the work.
 
 ### Turn advice into a verified artifact
 
@@ -16,20 +14,20 @@ Start with the recommendation, ask for a concrete output, and keep responsibilit
 
 #### Do this
 
-Ask the assistant for one artifact you can attach to the ticket, PR, repo, or Confluence page: acceptance criteria, ADR, PR plan, test plan, traceability table, or runbook.
+If useful, ask a tool to draft one artifact you can attach to the ticket, PR, repository, or team documentation: acceptance criteria, ADR, PR plan, test plan, traceability table, or runbook.
 
 #### Why this works
 
-Agent outputs become useful when they leave reviewable evidence behind. A prompt that only gives advice is easy to ignore; a prompt that produces an artifact can be checked, improved, and reused.
+Advice becomes useful when it leaves reviewable evidence behind. A draft artifact can be checked, improved, and reused; it should never replace codebase evidence, team judgment, or ownership.
 
 #### How to
 
-Use this base prompt and replace the bracketed sections with your real context.
+Use this optional base prompt only when a draft would save time, and replace the bracketed sections with real context.
 
 **Prompt template: Verified engineering artifact**
 
 ```text
-Act as a senior engineer helping me prepare a reviewable artifact.
+You are helping me prepare a [specific artifact] for [specific audience]. Review the supplied evidence and identify what is known, missing, or unsafe to assume.
 
 Context:
 - Task: [what I am trying to build or change]
@@ -56,7 +54,7 @@ Output format:
 5. Open questions
 6. Human verification checklist
 
-End with the exact things I must verify before I trust or share this output.
+End with the exact evidence I must verify before I trust or share this draft. Do not make a recommendation when the supplied context is insufficient; put it under Open questions instead.
 ```
 
 ## Pillar 1 - Ideation & Requirements
@@ -77,7 +75,7 @@ Most delivery mistakes start before coding: vague scope, hidden assumptions, and
 
 #### How to
 
-Rewrite the raw request into a structured ticket with `Why`, `What`, and `Acceptance Criteria` before touching code. Use an AI assistant to turn a vague request or Slack thread into a first-draft ticket, then review and correct each section before adopting it.
+Rewrite the raw request into a structured ticket with `Why`, `What`, and `Acceptance Criteria` before touching code. A drafting tool may help organize a vague request or Slack thread, but review and correct each section before adopting it.
 
 Ask a teammate to challenge your assumptions before implementation starts, especially for new integrations or ambiguous scope. Every meaningful task needs three sections: `Why`, `What`, and `Acceptance Criteria`.
 
@@ -86,7 +84,7 @@ Project reference: `prompts/gherkin.md`
 **Prompt template: Structured ticket**
 
 ```text
-Act as a senior product engineer turning a rough request into a clear ticket.
+You are reviewing a rough request as a product engineer responsible for making its scope testable and understandable to the implementer and reviewer.
 
 Request:
 """
@@ -132,7 +130,7 @@ Design issues are cheap to catch when the solution is still abstract. Visibility
 
 #### How to
 
-Before coding, produce a small design artifact: a diagram, an ADR stub, or a written decision note. Even a rough sketch is enough to get meaningful review. Use an AI assistant to draft an ADR, enumerate alternatives, or surface missing security considerations, then validate the output against the actual codebase and your team's standards.
+Before coding, produce a small design artifact: a diagram, an ADR stub, or a written decision note. Even a rough sketch is enough to get meaningful review. A drafting tool can enumerate alternatives or surface missing security considerations, but validate every statement against the actual codebase and your team's standards.
 
 In the artifact, explicitly state one security risk and at least one alternative you rejected and why. For changes touching data flow, APIs, or auth, a diagram or ADR note is required before merge.
 
@@ -141,7 +139,7 @@ Good artifact contents: context, decision, alternatives considered, tradeoffs, r
 **Prompt template: Architecture decision record**
 
 ```text
-Act as a senior engineer reviewing a proposed technical approach.
+You are reviewing whether a proposed technical approach is coherent, compatible with the supplied codebase, and safe to implement.
 
 Change I am planning:
 """
@@ -178,7 +176,7 @@ Keep implementation changes small enough that intent stays visible in code revie
 
 ### Optimize for reviewability
 
-Use AI only as an accelerator for mechanical work, not as a substitute for PR structure or code ownership decisions.
+Use drafting tools only for bounded support, not as a substitute for PR structure, code ownership, or engineering decisions.
 
 #### Do this
 
@@ -190,14 +188,14 @@ Large undifferentiated PRs hide risk. When changes are sliced by responsibility,
 
 #### How to
 
-Outline the PR sequence in the ticket or PR description before coding: which slice goes first, what stays out of scope, what follows. Use an AI assistant to propose how to split a broad change into reviewable PRs, then validate the boundaries yourself so refactors, behavior changes, and docs updates stay coherent.
+Outline the PR sequence in the ticket or PR description before coding: which slice goes first, what stays out of scope, what follows. A drafting tool can suggest a split for a broad change, but validate the boundaries yourself so refactors, behavior changes, and docs updates stay coherent.
 
 Defer unrelated fixes to follow-up tickets rather than bundling them in. Each PR should answer one question clearly: refactor, new behavior, or documentation alignment. If the PR summary needs multiple paragraphs to explain scope, the slice is probably too large.
 
 **Prompt template: PR sequence plan**
 
 ```text
-Act as a senior engineer helping me split work into reviewable PRs.
+You are reviewing how to split this change into PRs that each have one clear reason to review.
 
 Task:
 """
@@ -207,7 +205,7 @@ Task:
 Known affected areas:
 - Files/modules: [list known files or "unknown"]
 - Tests: [known test files or test gaps]
-- Docs: [README, Confluence, runbook, product docs]
+- Docs: [README, runbook, product docs, team documentation]
 - Constraints: [deadline, compatibility, rollout, risk]
 
 Rules:
@@ -242,14 +240,14 @@ Manual deployments and local-only testing introduce inconsistency and risk. A we
 
 #### How to
 
-Start with a minimal workflow that runs tests on every PR, then incrementally add linting, security scans, and deployment stages. Use an AI assistant to generate a pipeline config as a starting point, then review every step for correctness, security gaps, and coverage before committing it.
+Start with a minimal workflow that runs tests on every PR, then incrementally add linting, security scans, and deployment stages. If a drafting tool generates configuration, review every step for correctness, security gaps, and coverage before committing it.
 
 Block merges when CI fails and treat a broken pipeline as a production incident. Pipeline changes go through the same review process as application code. Useful additions include environment-specific secrets management, deployment gates between staging and production, and automated smoke tests post-deploy.
 
 **Prompt template: Pipeline review**
 
 ```text
-Act as a senior engineer reviewing a CI/CD workflow for release safety.
+You are reviewing this CI/CD workflow for ordering, failure handling, security, and release safety.
 
 Workflow or pipeline config:
 """
@@ -289,14 +287,14 @@ Data integrity issues compound over time. Inconsistent records and silent corrup
 
 #### How to
 
-Design validation rules at every boundary you own: API inputs, service contracts, and DB constraints, as part of the feature design, not as an afterthought. Use an AI assistant to review an API schema or data model for missing constraints, edge cases, or unvalidated fields, then evaluate each suggestion against actual business rules before applying it.
+Design validation rules at every boundary you own: API inputs, service contracts, and DB constraints, as part of the feature design, not as an afterthought. A drafting tool may review an API schema or data model for missing constraints, but evaluate every suggestion against actual business rules before applying it.
 
 Treat any unvalidated input reaching business logic as a defect and enforce it in code review. Good evidence of strong integrity practice: input validation at the API boundary, constraints in the DB schema, transactional writes for multi-step operations, and at least one test for an invalid-input scenario.
 
 **Prompt template: Data integrity review**
 
 ```text
-Act as a senior engineer reviewing data integrity for a change.
+You are reviewing whether this change protects data integrity across its inputs, state transitions, and writes.
 
 Context:
 - Feature or workflow: [what data is created, changed, or deleted]
@@ -340,14 +338,14 @@ Defects often survive because test planning mirrors the expected success path to
 
 #### How to
 
-Before writing tests, identify one happy-path case, one edge case, and one failure mode for every material change. Use an AI assistant to generate additional test scenarios for a function or module, then compare each one against real invariants, production incidents, and regression history before accepting it.
+Before writing tests, identify one happy-path case, one edge case, and one failure mode for every material change. You may use a drafting tool to suggest additional test scenarios for a function or module, then compare each one against real invariants, production incidents, and regression history before accepting it.
 
 During PR review, ask what happens when inputs are invalid, external calls fail, or state is partially updated. Require reviewers to name the riskiest untested branch before approval. Good evidence: unit tests for logic, integration tests for contracts, and one note about observability or debugging signals.
 
 **Prompt template: Test coverage check**
 
 ```text
-Act as a senior test engineer looking for bugs before users do.
+You are reviewing this behavior for the highest-value tests, especially cases that could cause user-visible or production failures.
 
 Code, behavior, or ticket:
 """
@@ -388,18 +386,18 @@ Document the minimum operational context needed to debug, support, and roll back
 
 #### Why this works
 
-Maintainability depends on what future engineers can see when things go wrong. AI can help draft support notes, but teams still need clear ownership, observability, and rollback thinking embedded in delivery.
+Maintainability depends on what future engineers can see when things go wrong. A drafting tool may help organize support notes, but ownership, observability, and rollback thinking still need to be established by the team.
 
 #### How to
 
-Before shipping, document the minimum operational context: signals to watch, failure symptoms, first debugging steps, and how to roll back. Use an AI assistant to draft a runbook or handoff note, then verify every monitoring reference, config detail, and rollback statement against the actual system before publishing it.
+Before shipping, document the minimum operational context: signals to watch, failure symptoms, first debugging steps, and how to roll back. A drafting tool may organize a runbook or handoff note, but verify every monitoring reference, config detail, and rollback statement against the actual system before publishing it.
 
 Every change that affects operations should state what to watch, where to look first, and how to reduce blast radius. Minimum checklist: signals to watch, common failure modes, mitigation options, and who owns the area.
 
 **Prompt template: Operational runbook**
 
 ```text
-Act as an on-call-ready engineer writing a practical runbook.
+You are writing a practical runbook for the engineer who will support this change while its original author is unavailable.
 
 Feature or change:
 """

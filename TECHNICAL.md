@@ -74,7 +74,6 @@ No Confluence token, LLM API key, database URL, or auth secret is required.
 | Human-readable generated assessment reference | [FRAMEWORK.md](FRAMEWORK.md) |
 | Playbook and prompt guidance | [content/playbook.md](content/playbook.md) |
 | Repository-analysis prompt | [prompts/repo-analysis.md](prompts/repo-analysis.md) |
-| Gherkin prompt | [prompts/gherkin.md](prompts/gherkin.md) |
 
 When changing questions, hints, or recommendations, run:
 

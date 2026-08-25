@@ -4,7 +4,7 @@ Product definition for the current static self-diagnostic experience.
 
 ## At A Glance
 
-SWE Best Practices Pulse is a static self-diagnostic tool for engineers. It helps a user assess their current engineering habits across five pillars, review their answers, and get practical recommendations with AI prompt guides for improving their next task.
+SWE Best Practices Pulse is a static self-diagnostic tool for engineers. It helps a user assess their current engineering habits across five pillars, review their answers, and get practical recommendations and optional drafting guides for improving their next task.
 
 The product is intentionally small: no server, no login, no database, no team sessions, and no admin reporting. It is designed to work as a zero-infrastructure GitHub Pages site.
 
@@ -15,7 +15,7 @@ The single score is informed by selected public engineering practices such as DO
 - Complete a personal 16-question self-diagnostic
 - Receive a score level, pillar breakdown, and prioritized recommendations
 - Review the exact answers selected in the latest questionnaire submission
-- Open the playbook for deeper guidance and copyable prompt patterns
+- Open the playbook for deeper guidance, artifacts, checklists, and optional prompt patterns
 - Run an optional repository-analysis prompt in an external AI assistant and inspect the returned score locally
 - Use Confluence as the broader CoE knowledge hub when teams need richer examples or workshop material
 
@@ -47,7 +47,7 @@ The concrete raw cutoffs are computed at runtime from `resolveScoreBands(maxScor
 
 ## Recommendation Model
 
-Dashboard recommendations are meant to be short, practical next actions. The playbook and prompt files provide the deeper `Do / Prompt / Output / Check` structure when a user wants step-by-step guidance.
+Dashboard recommendations are meant to be short, practical next actions. The playbook provides deeper `Do / Why / How` guidance, artifacts, and checklists; prompt files are optional drafting aids when a user wants them.
 
 Each recommendation should still answer, directly or through its linked playbook section:
 
@@ -88,7 +88,7 @@ Create a short ADR before coding. Include context, decision, tradeoffs, one risk
 
 ## Repository Analysis (Alternative Assessment Method)
 
-In addition to the manual questionnaire, engineers can use an automated repository analysis prompt to score their projects. This method analyzes observable signals from a repository: commit history, CI/CD configuration, test coverage, documentation, and code organization.
+In addition to the manual questionnaire, engineers can use an external repository-analysis prompt to score their projects. This method analyzes observable signals from a repository: clarified requirements, design artifacts, commit and PR evidence, CI/CD configuration, test depth, documentation, operational handoff material, and code organization. It scores only evidence supplied to the assistant; it does not infer team habits from a directory listing or assume production infrastructure that is not shown.
 
 ### How It Works
 
@@ -114,13 +114,13 @@ The submission JSON contains:
 - raw score
 - score level
 
-The repository-analysis flow is local-only. It does not create a persisted dashboard result.
+The repository-analysis flow is local-only. It does not create a persisted dashboard result. Recommendations should point to a concrete artifact or check, such as acceptance criteria, an impact note, a design record, a traceability table, a test plan, or a handoff/runbook checklist.
 
 ### Advantages
 
-- No manual effort: analysis happens automatically from repository signals
+- No manual scoring effort: analysis is drafted from supplied repository signals
 - Language-agnostic: works with repositories in any programming language
-- More objective: scores reflect visible engineering evidence, not only self-reporting
+- Evidence-focused: scores reflect visible engineering evidence, while missing context is reported as uncertainty
 - Repeatable: can be run each cycle to compare progress over time
 - Actionable: recommendations stay tied to the repository's actual score level
 

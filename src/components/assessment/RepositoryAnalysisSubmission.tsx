@@ -1,15 +1,56 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { assessmentTemplate } from "@/data/assessmentTemplate";
+import { clearDraft, saveResult } from "@/lib/draftStorage";
+import { calculateAssessment } from "@/lib/scoring";
 import { ErrorToast } from "@/components/assessment/ErrorToast";
+import { AnswerMap, AssessmentResult, ScoreValue } from "@/types/assessment";
 
 interface RepositoryAnalysisSubmissionProps {
   promptContent: string;
 }
 
+function extractAnswersFromJson(parsed: unknown): AnswerMap {
+  const answers: AnswerMap = {};
+  if (!parsed || typeof parsed !== "object") return answers;
+
+  const record = parsed as Record<string, unknown>;
+  const analysis = (record.analysis && typeof record.analysis === "object"
+    ? record.analysis
+    : record) as Record<string, unknown>;
+
+  const pillars = analysis.pillars;
+  if (pillars && typeof pillars === "object") {
+    for (const pillarObj of Object.values(pillars as Record<string, unknown>)) {
+      if (pillarObj && typeof pillarObj === "object") {
+        const questions = (pillarObj as Record<string, unknown>).questions;
+        if (Array.isArray(questions)) {
+          for (const q of questions) {
+            if (q && typeof q === "object") {
+              const qObj = q as Record<string, unknown>;
+              const id = qObj.id;
+              const score = qObj.score;
+              if (typeof id === "string" && typeof score === "number") {
+                if (score >= 1 && score <= 4) {
+                  answers[id] = score as ScoreValue;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return answers;
+}
+
 export function RepositoryAnalysisSubmission({
   promptContent,
 }: RepositoryAnalysisSubmissionProps) {
+  const router = useRouter();
   const [jsonInput, setJsonInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -47,18 +88,64 @@ export function RepositoryAnalysisSubmission({
 
     setIsSubmitting(true);
     try {
-      const parsed = JSON.parse(jsonInput) as {
-        analysis?: { raw_score?: number; score_level?: string };
-      };
-      const rawScore = parsed?.analysis?.raw_score;
-      const scoreLevel = parsed?.analysis?.score_level;
-      if (typeof rawScore !== "number" || typeof scoreLevel !== "string") {
-        setError("Invalid JSON format. Make sure it includes analysis.raw_score and analysis.score_level.");
+      const parsed = JSON.parse(jsonInput) as Record<string, unknown>;
+      const analysis = (parsed?.analysis && typeof parsed.analysis === "object"
+        ? parsed.analysis
+        : parsed) as Record<string, unknown>;
+
+      const rawScore = typeof analysis?.raw_score === "number" ? analysis.raw_score : undefined;
+      const scoreLevel =
+        typeof analysis?.score_level === "string" ? analysis.score_level : undefined;
+
+      const answers = extractAnswersFromJson(parsed);
+      const hasAnswers = Object.keys(answers).length > 0;
+
+      if (!hasAnswers && (rawScore === undefined || scoreLevel === undefined)) {
+        setError(
+          "Invalid JSON format. Make sure it includes analysis.raw_score and analysis.score_level or analysis.pillars with questions."
+        );
         return;
       }
-      setLocalScore({ rawScore, scoreLevel });
+
+      let result: AssessmentResult;
+      if (hasAnswers) {
+        result = calculateAssessment(assessmentTemplate, answers);
+      } else {
+        const totalQuestions = assessmentTemplate.categories.reduce(
+          (acc, current) => acc + current.questions.length,
+          0
+        );
+        const maxScore = totalQuestions * 4;
+        const totalScore = rawScore ?? 0;
+        const level = (scoreLevel as AssessmentResult["scoreLevel"]) ?? "Foundational";
+
+        result = {
+          overallScore: Number((totalScore / Math.max(1, totalQuestions)).toFixed(2)),
+          totalScore,
+          maxScore,
+          completion: 100,
+          scoreLevel: level,
+          categories: assessmentTemplate.categories.map((category) => ({
+            id: category.id,
+            title: category.title,
+            score: Number((totalScore / Math.max(1, totalQuestions)).toFixed(2)),
+            answered: category.questions.length,
+            total: category.questions.length,
+            weight: category.weight,
+            suggestions: [],
+          })),
+        };
+      }
+
+      saveResult(result, answers);
+      await clearDraft();
+
+      setLocalScore({ rawScore: result.totalScore, scoreLevel: result.scoreLevel });
       setJsonInput("");
-    } catch {
+
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Analysis submission error:", err);
       setError("Invalid JSON. Please paste the exact output from the analysis prompt.");
     } finally {
       setIsSubmitting(false);

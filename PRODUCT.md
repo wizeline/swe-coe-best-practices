@@ -64,12 +64,13 @@ Create a short ADR before coding. Include context, decision, tradeoffs, one risk
 
 ## Routes
 
-| Route       | Purpose                                                                       |
-| ----------- | ----------------------------------------------------------------------------- |
-| /           | Redirects to `/assessment`                                                    |
-| /assessment | Personal questionnaire and repository-analysis prompt entry point             |
-| /dashboard  | Latest local result, score breakdown, recommendations, and answer review      |
-| /playbook   | Markdown-backed engineering playbook organized by pillar                      |
+| Route            | Purpose                                                                       |
+| ---------------- | ----------------------------------------------------------------------------- |
+| /                | Redirects to `/dashboard`                                                     |
+| /assessment      | Personal questionnaire and repository-analysis prompt entry point             |
+| /dashboard       | Latest local result, score breakdown, recommendations, and answer review      |
+| /playbook        | Markdown-backed engineering playbook organized by pillar                      |
+| Unknown (404)    | Non-existent routes redirect to `/dashboard`                                  |
 
 ## Data And Persistence
 
@@ -93,14 +94,8 @@ In addition to the manual questionnaire, engineers can use an external repositor
 ### How It Works
 
 1. Get the prompt from `prompts/repo-analysis.md` or from the copyable section in `/assessment`
-2. Run the prompt in your AI assistant of choice
-3. Provide repository context:
-   - directory structure
-   - recent commits
-   - CI/CD configuration
-   - test framework and coverage info
-   - README and architecture documentation
-   - package and dependency files
+2. Run the prompt in an AI assistant or agent
+3. The AI agent collects repository evidence using available workspace tools (reading files, git logs, search) or asks the user for specific missing artifacts (directory structure, recent commits, CI configs, test setups, README/docs)
 4. Receive two outputs:
    - a minimal JSON block for dashboard submission
    - a separate private recommendations section for the user
@@ -114,7 +109,7 @@ The submission JSON contains:
 - raw score
 - score level
 
-The repository-analysis flow is local-only. It does not create a persisted dashboard result. Recommendations should point to a concrete artifact or check, such as acceptance criteria, an impact note, a design record, a traceability table, a test plan, or a handoff/runbook checklist.
+Submitting the analysis JSON calculates the full assessment scores, persists the result locally to `localStorage`, and navigates to `/dashboard` so the dashboard displays the updated result and recommendations.
 
 ### Advantages
 

@@ -8,7 +8,7 @@ AI agent and coding assistant instructions for this repository.
 
 - **Stack:** Next.js 16 (App Router), TypeScript 5 strict, plain CSS, no Tailwind, static export
 - **State:** Browser `localStorage` only via `src/lib/draftStorage.ts`
-- **Routes:** `/` → redirect, `/assessment` (form + repository prompt), `/dashboard` (local results), `/playbook` (static Markdown guidance)
+- **Routes:** `/` → redirect to `/dashboard`, non-existent routes → redirect to `/dashboard`, `/assessment` (form + repository prompt), `/dashboard` (local results), `/playbook` (static Markdown guidance)
 
 ## Architecture
 

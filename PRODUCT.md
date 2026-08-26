@@ -12,7 +12,7 @@ The single score is informed by selected public engineering practices such as DO
 
 ## Core Experience
 
-- Complete a personal 16-question self-diagnostic
+- Complete a personal 15-question self-diagnostic
 - Receive a score level, pillar breakdown, and prioritized recommendations
 - Review the exact answers selected in the latest questionnaire submission
 - Open the playbook for deeper guidance, artifacts, checklists, and optional prompt patterns
@@ -21,15 +21,15 @@ The single score is informed by selected public engineering practices such as DO
 
 ## What It Measures
 
-Five pillars, each with 2-4 questions scored from 1 (`Foundational`) to 4 (`Strategic`):
+Five pillars, each with 3 questions scored from 1 (`Foundational`) to 4 (`Strategic`):
 
 | Pillar                         | Focus                                                                                       |
 | ------------------------------ | ------------------------------------------------------------------------------------------- |
 | 1 - Ideation and Requirements  | Requirements clarity, impact analysis, and personal delivery reflection                      |
 | 2 - Design and Architecture    | Technical planning, pattern reuse, and security thinking                                    |
-| 3 - Development Hygiene        | Reviewable PRs, traceability, docs, CI/CD habits, and data integrity                        |
+| 3 - Development Hygiene        | Reviewable PRs, traceability, docs, and data integrity                                       |
 | 4 - Quality Engineering        | Edge-case testing, self-review, and test debt management                                    |
-| 5 - Operations and Maintenance | Debuggability, observability, runbooks, and handoff readiness                               |
+| 5 - Operations and Maintenance | Debuggability, observability, CI/CD habits, runbooks, and handoff readiness                  |
 
 ## Scoring Scale
 

@@ -226,53 +226,6 @@ Output as a table with columns:
 End with the smallest safe first PR.
 ```
 
-### Build reliable CI/CD pipelines
-
-Automate the path from code to production so every delivery is consistent, safe, and reversible.
-
-#### Do this
-
-Set up a CI pipeline that runs builds, tests, linting, and security checks automatically on every pull request. Add a deployment stage with environment promotion and rollback capabilities.
-
-#### Why this works
-
-Manual deployments and local-only testing introduce inconsistency and risk. A well-structured CI/CD pipeline catches problems early, enforces shared quality standards, and makes rollbacks predictable, reducing the cost of every release.
-
-#### How to
-
-Start with a minimal workflow that runs tests on every PR, then incrementally add linting, security scans, and deployment stages. If a drafting tool generates configuration, review every step for correctness, security gaps, and coverage before committing it.
-
-Block merges when CI fails and treat a broken pipeline as a production incident. Pipeline changes go through the same review process as application code. Useful additions include environment-specific secrets management, deployment gates between staging and production, and automated smoke tests post-deploy.
-
-**Prompt template: Pipeline review**
-
-```text
-You are reviewing this CI/CD workflow for ordering, failure handling, security, and release safety.
-
-Workflow or pipeline config:
-"""
-[Paste the workflow YAML or pipeline steps]
-"""
-
-Context:
-- Project type: [frontend, API, static site, package, mobile, etc.]
-- Required checks: [lint, tests, build, security, deploy]
-- Deployment target: [if any]
-
-Rules:
-- Do not assume tools that are not shown or mentioned.
-- Separate blockers from improvements.
-- Prefer concrete, minimal fixes.
-- Flag any step that deploys before quality gates pass.
-
-Output exactly:
-1. Blockers
-2. Recommended fixes
-3. Missing checks
-4. Safer pipeline order
-5. Human verification checklist
-```
-
 ### Enforce data integrity across services
 
 Treat data consistency as a design constraint, not an afterthought.
@@ -375,6 +328,53 @@ Output exactly:
 ## Pillar 5 - Operations & Maintenance
 
 Leave enough context behind that another engineer can safely operate what you ship.
+
+### Build reliable CI/CD pipelines
+
+Automate the path from code to production so every delivery is consistent, safe, and reversible.
+
+#### Do this
+
+Set up a CI pipeline that runs builds, tests, linting, and security checks automatically on every pull request. Add a deployment stage with environment promotion and rollback capabilities.
+
+#### Why this works
+
+Manual deployments and local-only testing introduce inconsistency and risk. A well-structured CI/CD pipeline catches problems early, enforces shared quality standards, and makes rollbacks predictable, reducing the cost of every release.
+
+#### How to
+
+Start with a minimal workflow that runs tests on every PR, then incrementally add linting, security scans, and deployment stages. If a drafting tool generates configuration, review every step for correctness, security gaps, and coverage before committing it.
+
+Block merges when CI fails and treat a broken pipeline as a production incident. Pipeline changes go through the same review process as application code. Useful additions include environment-specific secrets management, deployment gates between staging and production, and automated smoke tests post-deploy.
+
+**Prompt template: Pipeline review**
+
+```text
+You are reviewing this CI/CD workflow for ordering, failure handling, security, and release safety.
+
+Workflow or pipeline config:
+"""
+[Paste the workflow YAML or pipeline steps]
+"""
+
+Context:
+- Project type: [frontend, API, static site, package, mobile, etc.]
+- Required checks: [lint, tests, build, security, deploy]
+- Deployment target: [if any]
+
+Rules:
+- Do not assume tools that are not shown or mentioned.
+- Separate blockers from improvements.
+- Prefer concrete, minimal fixes.
+- Flag any step that deploys before quality gates pass.
+
+Output exactly:
+1. Blockers
+2. Recommended fixes
+3. Missing checks
+4. Safer pipeline order
+5. Human verification checklist
+```
 
 ### Ship with an operational trail
 

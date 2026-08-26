@@ -16,7 +16,7 @@ function makeResult(): AssessmentResult {
   return {
     overallScore: 46,
     totalScore: 46,
-    maxScore: 64,
+    maxScore: 60,
     completion: 100,
     scoreLevel: "Optimized",
     categories: assessmentTemplate.categories.map((category) => ({

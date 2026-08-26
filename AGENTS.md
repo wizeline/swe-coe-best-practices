@@ -4,7 +4,7 @@ AI agent and coding assistant instructions for this repository.
 
 ## Project Overview
 
-**SWE Best Practices Pulse** is a static self-diagnostic for engineering habits across five pillars. Developers score 16 practices on a 1–4 scale (16 questions × 4 levels = 0–64 raw score) and receive score levels, pillar scores, and practical recommendations with prompt guides.
+**SWE Best Practices Pulse** is a static self-diagnostic for engineering habits across five pillars. Developers score 15 practices on a 1–4 scale (15 questions × 4 levels = 0–60 raw score) and receive score levels, pillar scores, and practical recommendations with prompt guides.
 
 - **Stack:** Next.js 16 (App Router), TypeScript 5 strict, plain CSS, no Tailwind, static export
 - **State:** Browser `localStorage` only via `src/lib/draftStorage.ts`

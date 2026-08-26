@@ -33,7 +33,7 @@ describe("result storage", () => {
   const minimalResult: AssessmentResult = {
     overallScore: 30,
     totalScore: 30,
-    maxScore: 64,
+    maxScore: 60,
     completion: 100,
     scoreLevel: "Disciplined",
     categories: [],

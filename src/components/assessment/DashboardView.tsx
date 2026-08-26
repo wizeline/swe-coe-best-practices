@@ -51,9 +51,9 @@ export function DashboardView() {
             <strong>Individual assessment</strong>
             <p>Complete the assessment to see your results and action items.</p>
           </div>
-          <a href="/assessment" className="button solid">
+          <Link href="/assessment" className="button solid">
             Start assessment
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -159,9 +159,9 @@ function ScoreCard({ localResult }: { localResult: LocalResult }) {
                 {isReviewOpen ? "Hide answers" : "Review answers"}
               </button>
             )}
-            <a href="/assessment" className="button solid">
+            <Link href="/assessment" className="button solid">
               New Assessment
-            </a>
+            </Link>
           </div>
         </section>
       </aside>
